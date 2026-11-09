@@ -2338,6 +2338,11 @@
 
     async function processLogin(credentials) {
       authError.classList.add("hidden");
+      const btnPin = document.getElementById("btn-submit-pin");
+      const btnPwd = document.getElementById("btn-submit-pwd");
+      if (btnPin) btnPin.textContent = "Verifying...";
+      if (btnPwd) btnPwd.textContent = "Signing In...";
+
       try {
         // Try server authentication first
         const res = await fetch(API_BASE + "/api/auth/login", {
@@ -2346,21 +2351,29 @@
           body: JSON.stringify(credentials)
         });
 
-        if (res.ok) {
+        if (res.status === 200) {
           const data = await res.json();
           if (data.success) {
             authToken = data.token;
             localStorage.setItem("sb_auth_token", authToken);
             applyUserPermissions(data.user);
-            return;
-          } else {
-            showAuthError(data.error || "Login failed");
+            if (btnPin) btnPin.textContent = "Login Karein →";
+            if (btnPwd) btnPwd.textContent = "Sign In →";
             return;
           }
+        } else if (res.status === 401) {
+          const data = await res.json();
+          showAuthError(data.error || "Galat Username, Password ya PIN!");
+          if (btnPin) btnPin.textContent = "Login Karein →";
+          if (btnPwd) btnPwd.textContent = "Sign In →";
+          return;
         }
       } catch (err) {
-        console.log("Backend offline, checking local credentials");
+        console.log("Backend connection error, falling back to local credentials", err);
       }
+
+      if (btnPin) btnPin.textContent = "Login Karein →";
+      if (btnPwd) btnPwd.textContent = "Sign In →";
 
       // Offline / Client Mode Fallback Authentication
       if (credentials.pin) {
@@ -2407,6 +2420,14 @@
     });
 
     // Submit Username / Password
+    document.getElementById("input-auth-password").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("btn-submit-pwd").click();
+    });
+
+    document.getElementById("input-auth-username").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("input-auth-password").focus();
+    });
+
     document.getElementById("btn-submit-pwd").addEventListener("click", () => {
       const username = document.getElementById("input-auth-username").value.trim();
       const password = document.getElementById("input-auth-password").value;
@@ -2420,7 +2441,7 @@
         try {
           fetch(API_BASE + "/api/auth/logout", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization":  }
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + (authToken || "") }
           });
         } catch(e){}
         currentUser = null;
