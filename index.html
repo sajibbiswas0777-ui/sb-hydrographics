@@ -1750,21 +1750,60 @@
       document.getElementById("setting-terms").value = s.terms || "";
     }
 
-    document.getElementById("form-shop-settings").addEventListener("submit", (e) => {
+    document.getElementById("form-shop-settings").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const shopName = document.getElementById("setting-shop-name").value.trim() || "SB HYDRO-GRAPHICS";
+      const tagline = document.getElementById("setting-tagline").value.trim();
+      const phone = document.getElementById("setting-phone").value.trim();
+      const whatsapp = phone.replace(/\D/g, "");
+      const gstin = document.getElementById("setting-gstin").value.trim();
+      const address = document.getElementById("setting-address").value.trim();
+      const upiId = document.getElementById("setting-upi-id").value.trim();
+      const owner = document.getElementById("setting-owner").value.trim();
+      const terms = document.getElementById("setting-terms").value.trim();
+
       appData.settings = {
-        shopName: document.getElementById("setting-shop-name").value,
-        tagline: document.getElementById("setting-tagline").value,
-        phone: document.getElementById("setting-phone").value,
-        whatsapp: document.getElementById("setting-phone").value.replace(/\D/g, ""),
-        gstin: document.getElementById("setting-gstin").value,
-        address: document.getElementById("setting-address").value,
-        upiId: document.getElementById("setting-upi-id").value,
-        owner: document.getElementById("setting-owner").value,
-        terms: document.getElementById("setting-terms").value,
+        shopName,
+        tagline,
+        phone,
+        whatsapp,
+        gstin,
+        address,
+        upiId,
+        owner,
+        terms
       };
+
       saveDB(appData);
-      showToast("Shop Details successfully saved!", "💾");
+      showToast("Saving Shop Details to Cloud...", "☁️");
+
+      // Push to Cloud Server
+      try {
+        const res = await fetch(API_BASE + "/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            shop_name: shopName,
+            tagline,
+            phone,
+            whatsapp,
+            gstin,
+            address,
+            upi_id: upiId,
+            owner,
+            terms
+          })
+        });
+
+        if (res.ok) {
+          showToast("Shop Details Cloud par save ho gayi!", "✅");
+        } else {
+          showToast("Saved locally (Server error)", "⚠️");
+        }
+      } catch (err) {
+        console.warn("Settings saved offline", err);
+        showToast("Offline: Saved on this device", "💾");
+      }
     });
 
     document.getElementById("btn-reset-demo-data").addEventListener("click", clearAllDemoData);

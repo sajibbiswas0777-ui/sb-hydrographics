@@ -406,21 +406,24 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
 
         # 10. Update Settings
         if path == "/api/settings":
+            clean_phone = str(payload.get("phone", "")).strip()
+            clean_wa = str(payload.get("whatsapp") or clean_phone).replace(" ", "").replace("+", "").replace("-", "")
+
             data["settings"] = {
-                "shop_name": payload.get("shop_name", "SB HYDRO-GRAPHICS"),
-                "tagline": payload.get("tagline", ""),
-                "phone": payload.get("phone", ""),
-                "whatsapp": payload.get("whatsapp", ""),
-                "gstin": payload.get("gstin", ""),
-                "address": payload.get("address", ""),
-                "owner": payload.get("owner", ""),
-                "upi_id": payload.get("upi_id", ""),
-                "terms": payload.get("terms", ""),
+                "shop_name": str(payload.get("shop_name") or payload.get("shopName") or "SB HYDRO-GRAPHICS").strip(),
+                "tagline": str(payload.get("tagline", "")).strip(),
+                "phone": clean_phone,
+                "whatsapp": clean_wa,
+                "gstin": str(payload.get("gstin", "")).strip(),
+                "address": str(payload.get("address", "")).strip(),
+                "owner": str(payload.get("owner", "")).strip(),
+                "upi_id": str(payload.get("upi_id") or payload.get("upiId") or "").strip(),
+                "terms": str(payload.get("terms", "")).strip(),
                 "updated_at": datetime.now().isoformat()
             }
             db.save_db(data)
             self._set_headers(200)
-            self.wfile.write(json.dumps({"success": True, "message": "Settings updated"}).encode())
+            self.wfile.write(json.dumps({"success": True, "message": "Settings updated", "settings": data["settings"]}).encode())
             return
 
         # 11. Restore Backup
