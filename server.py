@@ -7,6 +7,8 @@ from datetime import datetime
 import db
 
 PORT = int(os.environ.get("PORT", 5000))
+
+# Support both public folder and root folder fallback so Render never throws 404
 PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
 if not os.path.exists(PUBLIC_DIR) or not os.path.exists(os.path.join(PUBLIC_DIR, "index.html")):
     PUBLIC_DIR = os.path.dirname(__file__)
@@ -33,10 +35,26 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
+        # 1. Direct root / index.html serving fallback
+        if path in ("/", "/index.html"):
+            for candidate in [
+                os.path.join(PUBLIC_DIR, "index.html"),
+                os.path.join(os.path.dirname(__file__), "index.html"),
+                os.path.join(os.path.dirname(__file__), "public", "index.html"),
+            ]:
+                if os.path.exists(candidate):
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    with open(candidate, "rb") as f:
+                        self.wfile.write(f.read())
+                    return
+
+        # 2. API Endpoints
         if path.startswith("/api/"):
             return self.handle_api_get(path, urllib.parse.parse_qs(parsed.query))
 
-        # Serve uploaded photos
+        # 3. Serve uploaded photos
         if path.startswith("/uploads/"):
             filename = os.path.basename(path)
             filepath = os.path.join(UPLOADS_DIR, filename)
@@ -59,41 +77,71 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
         # 1. Health check
         if path == "/api/health":
             self._set_headers(200)
-            self.wfile.write(json.dumps({"status": "ok", "app": "SB HYDRO-GRAPHICS Server", "time": datetime.now().isoformat()}).encode())
+            self.wfile.write(json.dumps({
+                "status": "ok", 
+                "app": "SB HYDRO-GRAPHICS Server", 
+                "auth_enabled": True,
+                "time": datetime.now().isoformat()
+            }).encode())
             return
 
-        # 2. Settings
+        # 2. Auth: Check Current User (/api/auth/me)
+        if path == "/api/auth/me":
+            auth_header = self.headers.get("Authorization", "")
+            token = ""
+            if auth_header.startswith("Bearer "):
+                token = auth_header.split(" ", 1)[1].strip()
+            elif "token" in query:
+                token = query["token"][0]
+
+            session = db.validate_session(token)
+            if session:
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"authenticated": True, "user": session}).encode())
+            else:
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"authenticated": False}).encode())
+            return
+
+        # 3. List Users (/api/users)
+        if path == "/api/users":
+            users = db.list_users()
+            self._set_headers(200)
+            self.wfile.write(json.dumps(users).encode())
+            return
+
+        # 4. Settings
         if path == "/api/settings":
             self._set_headers(200)
             self.wfile.write(json.dumps(data.get("settings", {})).encode())
             return
 
-        # 3. Jobs
+        # 5. Jobs
         if path == "/api/jobs":
             self._set_headers(200)
             self.wfile.write(json.dumps(data.get("jobs", [])).encode())
             return
 
-        # 4. Stock
+        # 6. Stock
         if path == "/api/stock":
             self._set_headers(200)
             self.wfile.write(json.dumps(data.get("stock", [])).encode())
             return
 
-        # 5. Bills
+        # 7. Bills
         if path == "/api/bills":
             self._set_headers(200)
             self.wfile.write(json.dumps(data.get("bills", [])).encode())
             return
 
-        # 6. Dues
+        # 8. Dues
         if path == "/api/dues":
             dues = [j for j in data.get("jobs", []) if (j.get("total_amount", 0) - j.get("advance_paid", 0)) > 0]
             self._set_headers(200)
             self.wfile.write(json.dumps(dues).encode())
             return
 
-        # 7. Dashboard Stats
+        # 9. Dashboard Stats
         if path == "/api/stats":
             bills = data.get("bills", [])
             jobs = data.get("jobs", [])
@@ -120,10 +168,10 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(stats).encode())
             return
 
-        # 8. Export Backup JSON
+        # 10. Export Backup JSON
         if path == "/api/backup/export":
             backup = {
-                "version": "1.0",
+                "version": "2.0",
                 "app": "SB HYDRO-GRAPHICS",
                 "exported_at": datetime.now().isoformat(),
                 **data
@@ -149,7 +197,66 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
 
         data = db.load_db()
 
-        # 1. Create Job Card
+        # 1. AUTH: Login (/api/auth/login) - Supports PIN or Username+Password
+        if path == "/api/auth/login":
+            username = payload.get("username")
+            password = payload.get("password")
+            pin = payload.get("pin")
+
+            user = db.authenticate(username=username, password=password, pin=pin)
+            if user:
+                token = db.create_session(user)
+                self._set_headers(200)
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "token": token,
+                    "user": {
+                        "id": user["id"],
+                        "username": user["username"],
+                        "name": user.get("name", user["username"]),
+                        "role": user.get("role", "technician")
+                    }
+                }).encode())
+            else:
+                self._set_headers(401)
+                self.wfile.write(json.dumps({
+                    "success": False,
+                    "error": "Galat Username, Password ya PIN! Kripya dobara check karein."
+                }).encode())
+            return
+
+        # 2. AUTH: Logout (/api/auth/logout)
+        if path == "/api/auth/logout":
+            token = payload.get("token") or self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+            db.destroy_session(token)
+            self._set_headers(200)
+            self.wfile.write(json.dumps({"success": True}).encode())
+            return
+
+        # 3. Add New User (/api/users)
+        if path == "/api/users":
+            username = payload.get("username", "")
+            password = payload.get("password", "")
+            name = payload.get("name", "")
+            role = payload.get("role", "technician")
+            pin = payload.get("pin", "0000")
+            phone = payload.get("phone", "")
+
+            if not username or not password or not name:
+                self._set_headers(400)
+                self.wfile.write(json.dumps({"success": False, "error": "Username, password and name are required"}).encode())
+                return
+
+            ok, res = db.add_user(username, password, name, role, pin, phone)
+            if ok:
+                self._set_headers(201)
+                self.wfile.write(json.dumps({"success": True, "user": res}).encode())
+            else:
+                self._set_headers(400)
+                self.wfile.write(json.dumps({"success": False, "error": res}).encode())
+            return
+
+        # 4. Create Job Card
         if path == "/api/jobs":
             count = len(data["jobs"]) + 1
             job_id = payload.get("id") or f"SBH-{100 + count}"
@@ -175,7 +282,7 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": True, "id": job_id}).encode())
             return
 
-        # 2. Update Stage
+        # 5. Update Stage
         if path.startswith("/api/jobs/") and path.endswith("/stage"):
             job_id = path.split("/")[3]
             new_stage = payload.get("stage")
@@ -189,7 +296,7 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": True, "id": job_id, "stage": new_stage}).encode())
             return
 
-        # 3. Add Stock
+        # 6. Add Stock
         if path == "/api/stock":
             count = len(data["stock"]) + 1
             stock_id = payload.get("id") or f"STK-{count}"
@@ -208,7 +315,7 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": True, "id": stock_id}).encode())
             return
 
-        # 4. Adjust Stock
+        # 7. Adjust Stock
         if path.startswith("/api/stock/") and path.endswith("/adjust"):
             stock_id = path.split("/")[3]
             delta = float(payload.get("delta", 0))
@@ -221,7 +328,7 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": True, "id": stock_id}).encode())
             return
 
-        # 5. Create Bill
+        # 8. Create Bill
         if path == "/api/bills":
             count = len(data["bills"]) + 1
             bill_id = f"SBH-INV-{1000 + count}"
@@ -263,7 +370,7 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": True, "id": bill_id}).encode())
             return
 
-        # 6. Collect Due Payment
+        # 9. Collect Due Payment
         if path == "/api/dues/collect":
             job_id = payload.get("job_id")
             amount = float(payload.get("amount", 0))
@@ -285,7 +392,7 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": True, "job_id": job_id, "amount_collected": amount}).encode())
             return
 
-        # 7. Update Settings
+        # 10. Update Settings
         if path == "/api/settings":
             data["settings"] = {
                 "shop_name": payload.get("shop_name", "SB HYDRO-GRAPHICS"),
@@ -304,7 +411,7 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": True, "message": "Settings updated"}).encode())
             return
 
-        # 8. Restore Backup
+        # 11. Restore Backup
         if path == "/api/backup/restore":
             if "jobs" in payload and "settings" in payload:
                 db.save_db(payload)
@@ -345,6 +452,7 @@ def run_server():
         print(f"🌊 SB HYDRO-GRAPHICS Full-Stack Studio Server Live!")
         print(f"🌐 Access Dashboard & Billing: http://localhost:{PORT}")
         print(f"💾 Database: Local JSON Store (sb_hydrographics_data.json)")
+        print(f"🔐 Role-Based Auth: Admin (PIN 1234) & Karigar (PIN 0000)")
         print(f"============================================================")
         try:
             httpd.serve_forever()

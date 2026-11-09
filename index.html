@@ -126,17 +126,31 @@
             <span>Naya Job Card</span>
           </button>
 
-          <button id="btn-quick-new-bill" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 active:scale-95">
+          <button id="btn-quick-new-bill" class="role-admin-only px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 active:scale-95">
             <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span class="hidden sm:inline">New Bill</span>
             <span class="sm:hidden">Bill</span>
           </button>
+
+          <!-- USER BADGE & SWITCH / LOGOUT -->
+          <div id="user-badge-container" class="flex items-center gap-2 bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs">
+            <div id="user-role-icon" class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
+              👑
+            </div>
+            <div class="hidden sm:block text-left leading-tight">
+              <div id="user-display-name" class="font-bold text-slate-200 truncate max-w-[110px]">Sajib (Admin)</div>
+              <div id="user-display-role" class="text-[10px] text-cyan-400 font-medium">Full Access</div>
+            </div>
+            <button id="btn-user-switch" title="Switch User / Logout" class="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors ml-0.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- NAVIGATION TABS -->
       <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto pb-2 scrollbar-none border-t border-slate-800/80 pt-2 text-xs sm:text-sm font-semibold">
-        <button data-tab="dashboard" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+        <button data-tab="dashboard" class="nav-tab role-admin-only px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
           Dashboard
         </button>
@@ -149,16 +163,16 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           Films & Chemical Stock
         </button>
-        <button data-tab="bills" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <button data-tab="bills" class="nav-tab role-admin-only px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"/></svg>
           Bills & Invoices
         </button>
-        <button data-tab="dues" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <button data-tab="dues" class="nav-tab role-admin-only px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Customer Dues
           <span id="badge-dues-count" class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-slate-950 font-black">0</span>
         </button>
-        <button data-tab="settings" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <button data-tab="settings" class="nav-tab role-admin-only px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           Shop Details & Settings
         </button>
@@ -2140,6 +2154,291 @@
     window.addEventListener("DOMContentLoaded", () => {
       checkServerHealth();
     });
+
+</script>
+
+  <!-- ROLE-BASED LOGIN MODAL OVERLAY -->
+  <div id="modal-login" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-carbon-800 border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      <div class="text-center mb-6">
+        <div class="inline-flex p-3 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 text-cyan-400 mb-3 shadow-lg shadow-cyan-500/10">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+        </div>
+        <h2 class="text-2xl font-display font-black text-white tracking-wider">SB HYDRO-GRAPHICS</h2>
+        <p class="text-xs text-slate-400 mt-1">Water Transfer Printing & Dipping Studio</p>
+      </div>
+
+      <!-- AUTH TABS -->
+      <div class="flex border-b border-slate-700/80 mb-6">
+        <button id="auth-tab-pin" class="flex-1 py-2.5 text-center text-xs font-bold text-cyan-400 border-b-2 border-cyan-400 flex items-center justify-center gap-1.5 transition-all">
+          <span>🔢 Quick PIN (Fast)</span>
+        </button>
+        <button id="auth-tab-pwd" class="flex-1 py-2.5 text-center text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-200 flex items-center justify-center gap-1.5 transition-all">
+          <span>🔑 Username & Password</span>
+        </button>
+      </div>
+
+      <!-- ERROR MESSAGE CONTAINER -->
+      <div id="auth-error" class="hidden mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="auth-error-msg">Galat credentials! Kripya dobara try karein.</span>
+      </div>
+
+      <!-- TAB 1: QUICK PIN FORM -->
+      <div id="auth-form-pin" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 text-center">Apna Security PIN Dalein</label>
+          <input type="password" id="input-auth-pin" maxlength="6" placeholder="• • • •" class="w-full text-center text-3xl font-mono tracking-widest px-4 py-3 bg-slate-900 border-2 border-slate-700 rounded-2xl text-cyan-400 focus:outline-none focus:border-cyan-400 transition-all">
+        </div>
+        <button id="btn-submit-pin" class="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/25 active:scale-95 transition-all">
+          Login Karein &rarr;
+        </button>
+
+        <!-- 1-TAP PRESETS FOR CONVENIENCE -->
+        <div class="pt-4 border-t border-slate-800">
+          <p class="text-[11px] text-slate-400 text-center mb-2.5 font-medium">Ya 1-Click Fast Login select karein:</p>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button type="button" class="btn-fast-login p-3 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-500/30 text-left transition-all active:scale-95 group" data-pin="1234">
+              <div class="font-bold text-xs text-cyan-400 flex items-center gap-1 group-hover:text-cyan-300">👑 Sajib (Admin)</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Owner · PIN: 1234</div>
+            </button>
+            <button type="button" class="btn-fast-login p-3 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-purple-500/30 text-left transition-all active:scale-95 group" data-pin="2222">
+              <div class="font-bold text-xs text-purple-400 flex items-center gap-1 group-hover:text-purple-300">💼 Manager (sbwork)</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Manager · PIN: 2222</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: USERNAME & PASSWORD FORM -->
+      <div id="auth-form-pwd" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Username</label>
+          <input type="text" id="input-auth-username" placeholder="e.g. admin ya sbwork" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
+          <div class="relative">
+            <input type="password" id="input-auth-password" placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-cyan-400 pr-10">
+            <button type="button" id="btn-toggle-pwd" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200 text-xs">
+              👁️
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="auth-remember-me" checked class="rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-0">
+            <span>Is device par yaad rakhein</span>
+          </label>
+        </div>
+        <button id="btn-submit-pwd" class="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/25 active:scale-95 transition-all">
+          Sign In &rarr;
+        </button>
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+          <p><span class="text-cyan-400 font-bold">Admin:</span> admin / sbadmin123</p>
+          <p><span class="text-purple-400 font-bold">Manager:</span> sbwork / sbwork123</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+
+    // ==========================================
+    // AUTHENTICATION & ROLE-BASED ACCESS CONTROL
+    // ==========================================
+    let currentUser = null;
+    let authToken = localStorage.getItem("sb_auth_token") || "";
+
+    try {
+      currentUser = JSON.parse(localStorage.getItem("sb_current_user") || "null");
+    } catch(e) { currentUser = null; }
+
+    const modalLogin = document.getElementById("modal-login");
+    const authError = document.getElementById("auth-error");
+    const authErrorMsg = document.getElementById("auth-error-msg");
+    const tabPin = document.getElementById("auth-tab-pin");
+    const tabPwd = document.getElementById("auth-tab-pwd");
+    const formPin = document.getElementById("auth-form-pin");
+    const formPwd = document.getElementById("auth-form-pwd");
+
+    // Switch between PIN and Password tabs
+    tabPin.addEventListener("click", () => {
+      tabPin.className = "flex-1 py-2.5 text-center text-xs font-bold text-cyan-400 border-b-2 border-cyan-400 flex items-center justify-center gap-1.5 transition-all";
+      tabPwd.className = "flex-1 py-2.5 text-center text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-200 flex items-center justify-center gap-1.5 transition-all";
+      formPin.classList.remove("hidden");
+      formPwd.classList.add("hidden");
+      authError.classList.add("hidden");
+      document.getElementById("input-auth-pin").focus();
+    });
+
+    tabPwd.addEventListener("click", () => {
+      tabPwd.className = "flex-1 py-2.5 text-center text-xs font-bold text-cyan-400 border-b-2 border-cyan-400 flex items-center justify-center gap-1.5 transition-all";
+      tabPin.className = "flex-1 py-2.5 text-center text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-200 flex items-center justify-center gap-1.5 transition-all";
+      formPwd.classList.remove("hidden");
+      formPin.classList.add("hidden");
+      authError.classList.add("hidden");
+      document.getElementById("input-auth-username").focus();
+    });
+
+    // Toggle password visibility
+    const btnTogglePwd = document.getElementById("btn-toggle-pwd");
+    if (btnTogglePwd) {
+      btnTogglePwd.addEventListener("click", () => {
+        const inp = document.getElementById("input-auth-password");
+        inp.type = inp.type === "password" ? "text" : "password";
+      });
+    }
+
+    function showAuthError(msg) {
+      authErrorMsg.textContent = msg || "Galat credentials!";
+      authError.classList.remove("hidden");
+    }
+
+    function applyUserPermissions(user) {
+      if (!user) return;
+      currentUser = user;
+
+      // Update Header Badge
+      const roleIcon = document.getElementById("user-role-icon");
+      const displayName = document.getElementById("user-display-name");
+      const displayRole = document.getElementById("user-display-role");
+
+      if (user.role === "admin") {
+        roleIcon.textContent = "👑";
+        roleIcon.className = "w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs";
+        displayName.textContent = user.name || "Sajib (Admin)";
+        displayRole.textContent = "Owner · Full Access";
+        displayRole.className = "text-[10px] text-cyan-400 font-medium";
+
+        // Unhide admin elements
+        document.querySelectorAll(".role-admin-only").forEach(el => el.classList.remove("hidden"));
+      } else {
+        // Technician / Karigar role
+        roleIcon.textContent = "💼";
+        roleIcon.className = "w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs";
+        displayName.textContent = user.name || "Workshop Manager";
+        displayRole.textContent = "Manager · Operations";
+        displayRole.className = "text-[10px] text-purple-400 font-medium";
+
+        // Hide admin-only elements
+        document.querySelectorAll(".role-admin-only").forEach(el => el.classList.add("hidden"));
+
+        // Switch automatically to jobs tab if currently on restricted tab
+        const currentTabActive = document.querySelector(".nav-tab.bg-cyan-500\/10");
+        if (currentTabActive && currentTabActive.classList.contains("role-admin-only")) {
+          switchTab("jobs");
+        }
+      }
+
+      // Hide modal
+      modalLogin.classList.add("hidden");
+      localStorage.setItem("sb_current_user", JSON.stringify(user));
+    }
+
+    async function processLogin(credentials) {
+      authError.classList.add("hidden");
+      try {
+        // Try server authentication first
+        const res = await fetch(API_BASE + "/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(credentials)
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            authToken = data.token;
+            localStorage.setItem("sb_auth_token", authToken);
+            applyUserPermissions(data.user);
+            return;
+          } else {
+            showAuthError(data.error || "Login failed");
+            return;
+          }
+        }
+      } catch (err) {
+        console.log("Backend offline, checking local credentials");
+      }
+
+      // Offline / Client Mode Fallback Authentication
+      if (credentials.pin) {
+        if (credentials.pin === "1234") {
+          applyUserPermissions({ id: "USR-1", username: "admin", name: "Sajib Biswas (Owner)", role: "admin" });
+          return;
+        } else if (credentials.pin === "2222") {
+          applyUserPermissions({ id: "USR-2", username: "sbwork", name: "Workshop Manager", role: "manager" });
+          return;
+        }
+      } else if (credentials.username && credentials.password) {
+        const u = credentials.username.toLowerCase().trim();
+        const p = credentials.password;
+        if (u === "admin" && p === "sbadmin123") {
+          applyUserPermissions({ id: "USR-1", username: "admin", name: "Sajib Biswas (Owner)", role: "admin" });
+          return;
+        } else if (u === "sbwork" && p === "sbwork123") {
+          applyUserPermissions({ id: "USR-2", username: "sbwork", name: "Workshop Manager", role: "manager" });
+          return;
+        }
+      }
+
+      showAuthError("Galat Username, Password ya PIN!");
+    }
+
+    // Submit PIN
+    document.getElementById("btn-submit-pin").addEventListener("click", () => {
+      const pin = document.getElementById("input-auth-pin").value.trim();
+      if (!pin) { showAuthError("Kripya 4-digit PIN enter karein"); return; }
+      processLogin({ pin });
+    });
+
+    document.getElementById("input-auth-pin").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("btn-submit-pin").click();
+    });
+
+    // 1-Click fast login buttons
+    document.querySelectorAll(".btn-fast-login").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const pin = btn.dataset.pin;
+        document.getElementById("input-auth-pin").value = pin;
+        processLogin({ pin });
+      });
+    });
+
+    // Submit Username / Password
+    document.getElementById("btn-submit-pwd").addEventListener("click", () => {
+      const username = document.getElementById("input-auth-username").value.trim();
+      const password = document.getElementById("input-auth-password").value;
+      if (!username || !password) { showAuthError("Username aur Password dono zaroori hain"); return; }
+      processLogin({ username, password });
+    });
+
+    // Switch User / Logout
+    document.getElementById("btn-user-switch").addEventListener("click", () => {
+      if (confirm("Kya aap logout / doosra account switch karna chahte hain?")) {
+        try {
+          fetch(API_BASE + "/api/auth/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization":  }
+          });
+        } catch(e){}
+        currentUser = null;
+        authToken = "";
+        localStorage.removeItem("sb_auth_token");
+        localStorage.removeItem("sb_current_user");
+        modalLogin.classList.remove("hidden");
+        document.getElementById("input-auth-pin").value = "";
+        document.getElementById("input-auth-password").value = "";
+      }
+    });
+
+    // Check auth on startup
+    if (currentUser) {
+      applyUserPermissions(currentUser);
+    } else {
+      modalLogin.classList.remove("hidden");
+    }
 
 </script>
 </body>
