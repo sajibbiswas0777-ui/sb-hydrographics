@@ -8,6 +8,9 @@ import db
 
 PORT = int(os.environ.get("PORT", 5000))
 PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
+if not os.path.exists(PUBLIC_DIR) or not os.path.exists(os.path.join(PUBLIC_DIR, "index.html")):
+    PUBLIC_DIR = os.path.dirname(__file__)
+
 UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
