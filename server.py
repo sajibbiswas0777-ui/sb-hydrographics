@@ -261,20 +261,27 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             count = len(data["jobs"]) + 1
             job_id = payload.get("id") or f"SBH-{100 + count}"
 
+            cust_name = payload.get("customer_name") or payload.get("customerName", "")
+            veh_ref = payload.get("vehicle_ref") or payload.get("vehicleRef", "")
+            base_col = payload.get("base_color") or payload.get("baseColor", "Jet Black")
+            clr_coat = payload.get("clear_coat") or payload.get("clearCoat", "2K High Gloss Mirror")
+            tot_amt = payload.get("total_amount") if payload.get("total_amount") is not None else payload.get("totalAmount", 0)
+            adv_paid = payload.get("advance_paid") if payload.get("advance_paid") is not None else payload.get("advancePaid", 0)
+
             job = {
                 "id": job_id,
-                "customer_name": payload.get("customer_name", "").strip(),
-                "phone": payload.get("phone", "").strip(),
-                "item": payload.get("item", "").strip(),
-                "vehicle_ref": payload.get("vehicle_ref", "").strip(),
-                "pattern": payload.get("pattern", "3D Twill Carbon Fiber"),
-                "base_color": payload.get("base_color", "Jet Black"),
-                "clear_coat": payload.get("clear_coat", "2K High Gloss Mirror"),
-                "total_amount": float(payload.get("total_amount", 0)),
-                "advance_paid": float(payload.get("advance_paid", 0)),
+                "customer_name": str(cust_name).strip(),
+                "phone": str(payload.get("phone", "")).strip(),
+                "item": str(payload.get("item", "")).strip(),
+                "vehicle_ref": str(veh_ref).strip(),
+                "pattern": str(payload.get("pattern", "3D Twill Carbon Fiber")).strip(),
+                "base_color": str(base_col).strip(),
+                "clear_coat": str(clr_coat).strip(),
+                "total_amount": float(tot_amt or 0),
+                "advance_paid": float(adv_paid or 0),
                 "stage": payload.get("stage", "RECEIVED"),
-                "notes": payload.get("notes", "").strip(),
-                "created_at": datetime.now().isoformat()
+                "notes": str(payload.get("notes", "")).strip(),
+                "created_at": payload.get("date") or payload.get("created_at") or datetime.now().isoformat()
             }
             data["jobs"].insert(0, job)
             db.save_db(data)
@@ -331,21 +338,26 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
         # 8. Create Bill
         if path == "/api/bills":
             count = len(data["bills"]) + 1
-            bill_id = f"SBH-INV-{1000 + count}"
+            bill_id = payload.get("id") or f"SBH-INV-{1000 + count}"
             items = payload.get("items", [])
             subtotal = float(payload.get("subtotal", 0))
-            gst_applied = 1 if payload.get("gst_applied") else 0
-            gst_amount = float(payload.get("gst_amount", 0))
+            gst_applied = 1 if (payload.get("gst_applied") or payload.get("gstApplied")) else 0
+            gst_amount = float(payload.get("gst_amount") if payload.get("gst_amount") is not None else payload.get("gstAmount", 0))
             total = float(payload.get("total", 0))
             paid = float(payload.get("paid", 0))
             balance = max(0.0, total - paid)
+            cust_name = payload.get("customer_name") or payload.get("customerName", "")
+            job_link = payload.get("job_id") or payload.get("jobId", "")
+            pay_mode = payload.get("payment_mode") or payload.get("paymentMode", "UPI / QR")
+            b_date = payload.get("date") or payload.get("bill_date") or datetime.now().strftime("%Y-%m-%d")
 
             bill = {
                 "id": bill_id,
-                "bill_date": datetime.now().strftime("%Y-%m-%d"),
-                "customer_name": payload.get("customer_name", "").strip(),
-                "phone": payload.get("phone", "").strip(),
-                "job_id": payload.get("job_id", ""),
+                "bill_date": b_date,
+                "customer_name": str(cust_name).strip(),
+                "phone": str(payload.get("phone", "")).strip(),
+                "job_id": job_link,
+                "payment_mode": pay_mode,
                 "items": items,
                 "subtotal": subtotal,
                 "gst_applied": gst_applied,

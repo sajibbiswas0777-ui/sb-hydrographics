@@ -116,10 +116,15 @@
 
         <!-- QUICK ACTION BUTTONS & SYNC STATUS -->
         <div class="flex items-center gap-2 sm:gap-3">
-          <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+          <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Studio Live Mode</span>
+            <span class="hidden sm:inline">Live Cloud</span>
           </div>
+
+          <button id="btn-manual-sync" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/30 text-cyan-400 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm" title="Cloud ke sath instant data sync karein">
+            <svg id="sync-spinner-icon" class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span class="hidden sm:inline">Sync Cloud</span>
+          </button>
 
           <button id="btn-quick-new-job" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-1.5 active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
@@ -1496,6 +1501,17 @@
         renderJobs();
         renderDashboardJobs();
         showToast(`${job.id} stage updated: ${STAGES[job.stage].label}`, "🌊");
+
+        // Push stage change to cloud
+        try {
+          fetch(API_BASE + "/api/jobs/" + jobId + "/stage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stage: job.stage })
+          });
+        } catch (e) {
+          console.warn("Offline stage update saved locally", e);
+        }
       }
     };
 
@@ -1864,7 +1880,20 @@
       renderDashboardJobs();
       closeModal(modalJob);
       document.getElementById("form-job").reset();
-      showToast(`Job Card ${newId} created successfully!`, "🌊");
+      showToast(`Job Card ${newId} created! Cloud syncing...`, "🌊");
+
+      // Push to Cloud Server
+      try {
+        fetch(API_BASE + "/api/jobs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(job)
+        }).then(r => r.json()).then(() => {
+          showToast(`Job ${newId} saved to Cloud!`, "☁️");
+        });
+      } catch (err) {
+        console.warn("Offline job saved locally", err);
+      }
     });
 
     // FORM: ADD STOCK
@@ -1887,6 +1916,17 @@
       closeModal(modalStock);
       document.getElementById("form-stock").reset();
       showToast(`${item.name} stock added!`, "📦");
+
+      // Push stock to cloud
+      try {
+        fetch(API_BASE + "/api/stock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item)
+        });
+      } catch(e) {
+        console.warn("Stock saved locally", e);
+      }
     });
 
     // BILL MODAL DYNAMICS
@@ -2027,8 +2067,19 @@
       renderJobs();
       renderDues();
       closeModal(modalBill);
-      showToast(`Invoice ${invId} generated!`, "🧾");
+      showToast(`Invoice ${invId} generated! Cloud syncing...`, "🧾");
       viewInvoice(invId);
+
+      // Push bill to cloud
+      try {
+        fetch(API_BASE + "/api/bills", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bill)
+        });
+      } catch(e) {
+        console.warn("Bill saved locally", e);
+      }
     });
 
     // COLLECT PAYMENT MODAL
@@ -2059,6 +2110,17 @@
         renderDues();
         closeModal(modalPayment);
         showToast(`Payment of ₹${amt} received via ${mode}!`, "💰");
+
+        // Push payment to cloud
+        try {
+          fetch(API_BASE + "/api/dues/collect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ job_id: jobId, amount: amt, payment_mode: mode })
+          });
+        } catch(e) {
+          console.warn("Payment saved locally", e);
+        }
       }
     });
 
@@ -2140,27 +2202,63 @@
       }
     }
 
-    async function syncWithBackend() {
+    async function syncWithBackend(showFeedback = false) {
+      const spinner = document.getElementById("sync-spinner-icon");
+      if (spinner && showFeedback) spinner.classList.add("animate-spin");
+
       try {
         const [jobsRes, stockRes, billsRes, settingsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/jobs`),
-          fetch(`${API_BASE}/api/stock`),
-          fetch(`${API_BASE}/api/bills`),
-          fetch(`${API_BASE}/api/settings`)
+          fetch(API_BASE + "/api/jobs"),
+          fetch(API_BASE + "/api/stock"),
+          fetch(API_BASE + "/api/bills"),
+          fetch(API_BASE + "/api/settings")
         ]);
 
         if (jobsRes.ok) {
           const serverJobs = await jobsRes.json();
-          if (serverJobs.length > 0) appData.jobs = serverJobs;
+          appData.jobs = (serverJobs || []).map(j => ({
+            id: j.id,
+            customerName: j.customerName || j.customer_name || "Customer",
+            phone: j.phone || "",
+            item: j.item || "Hydro Dipping Part",
+            vehicleRef: j.vehicleRef || j.vehicle_ref || "",
+            pattern: j.pattern || "3D Twill Carbon Fiber",
+            baseColor: j.baseColor || j.base_color || "Jet Black",
+            clearCoat: j.clearCoat || j.clear_coat || "2K High Gloss Mirror",
+            totalAmount: parseFloat(j.totalAmount != null ? j.totalAmount : j.total_amount) || 0,
+            advancePaid: parseFloat(j.advancePaid != null ? j.advancePaid : j.advance_paid) || 0,
+            stage: j.stage || "RECEIVED",
+            notes: j.notes || "",
+            date: j.date || (j.created_at ? j.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10))
+          }));
         }
+
         if (stockRes.ok) {
           const serverStock = await stockRes.json();
-          if (serverStock.length > 0) appData.stock = serverStock;
+          if (serverStock && serverStock.length > 0) {
+            appData.stock = serverStock;
+          }
         }
+
         if (billsRes.ok) {
           const serverBills = await billsRes.json();
-          if (serverBills.length > 0) appData.bills = serverBills;
+          appData.bills = (serverBills || []).map(b => ({
+            id: b.id,
+            date: b.date || b.bill_date || (b.created_at ? b.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+            customerName: b.customerName || b.customer_name || "",
+            phone: b.phone || "",
+            jobId: b.jobId || b.job_id || "",
+            items: b.items || [],
+            subtotal: parseFloat(b.subtotal) || 0,
+            gstApplied: b.gstApplied != null ? b.gstApplied : (b.gst_applied ? true : false),
+            gstAmount: parseFloat(b.gstAmount != null ? b.gstAmount : b.gst_amount) || 0,
+            total: parseFloat(b.total) || 0,
+            paid: parseFloat(b.paid) || 0,
+            balance: parseFloat(b.balance) || 0,
+            paymentMode: b.paymentMode || b.payment_mode || "UPI / QR"
+          }));
         }
+
         if (settingsRes.ok) {
           const serverSettings = await settingsRes.json();
           if (serverSettings.shop_name) {
@@ -2177,6 +2275,7 @@
             };
           }
         }
+
         saveDB(appData);
         updateStats();
         renderDashboardCharts();
@@ -2186,10 +2285,29 @@
         renderBills();
         renderDues();
         populateSettingsForm();
+
+        if (showFeedback) {
+          showToast("Cloud Sync Complete! Sabhi devices synced hain.", "☁️");
+        }
       } catch (err) {
         console.warn("Backend sync failed, using cached data", err);
+      } finally {
+        if (spinner) spinner.classList.remove("animate-spin");
       }
     }
+
+    // Manual Sync Button Listener
+    const btnManualSync = document.getElementById("btn-manual-sync");
+    if (btnManualSync) {
+      btnManualSync.addEventListener("click", () => syncWithBackend(true));
+    }
+
+    // Automatic Real-Time Cloud Polling (Every 4 seconds)
+    setInterval(() => {
+      if (isServerConnected) {
+        syncWithBackend(false);
+      }
+    }, 4000);
 
     window.addEventListener("DOMContentLoaded", () => {
       checkServerHealth();
