@@ -14,13 +14,13 @@ DEFAULT_DATABASE = {
     "settings": {
         "shop_name": "SB HYDRO-GRAPHICS",
         "tagline": "Professional Water Transfer Printing & Specialized Coating Studio",
-        "phone": "+91 98765 43210",
-        "whatsapp": "919876543210",
-        "gstin": "27AABCS1234F1Z5",
-        "address": "Plot 12, Automobile Craft Zone, Main Highway Road, Pune, Maharashtra - 411019",
+        "phone": "+91 9933662955",
+        "whatsapp": "919933662955",
+        "gstin": "",
+        "address": "Sreepally, Barrackpore, Gopalnagar, Barakpur, West Bengal 743262",
         "owner": "Sajib Biswas",
         "upi_id": "sbhydro@okhdfcbank",
-        "terms": "1. 1-Year coating warranty against peel-off under regular automotive use. 2. Clean surface with soft microfiber cloth. Do not use industrial acids or wire brushes.",
+        "terms": "1. 1-Year coating warranty against peel-off under regular automotive use. 2. Clean surface with soft microfiber cloth. Do not use industrial acids or steel brushes.",
         "updated_at": datetime.now().isoformat()
     },
     "users": [
