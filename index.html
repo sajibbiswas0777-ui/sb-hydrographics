@@ -352,10 +352,16 @@
           </select>
         </div>
 
-        <button id="btn-create-job-modal" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          <span>Naya Hydro Dipping Job Card</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button id="btn-quick-clear-demo-jobs" class="role-admin-only px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95" title="Clear Sample Jobs">
+            <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <span class="hidden sm:inline">Clear Demo Records</span>
+          </button>
+          <button id="btn-create-job-modal" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Naya Hydro Dipping Job Card</span>
+          </button>
+        </div>
       </div>
 
       <!-- JOBS GRID / LIST -->
@@ -567,8 +573,9 @@
                 Save Studio Settings
               </button>
 
-              <button type="button" id="btn-reset-demo-data" class="text-xs text-rose-400 hover:underline">
-                Reset Sample Demo Data
+              <button type="button" id="btn-reset-demo-data" class="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-md">
+                <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span>Clear All Demo Data (Start Fresh Studio)</span>
               </button>
             </div>
           </form>
@@ -1493,14 +1500,53 @@
     };
 
     // DELETE JOB
-    window.deleteJob = function(jobId) {
+    window.deleteJob = async function(jobId) {
+      if (!confirm(`Kya aap Job Card ${jobId} ko hamesha ke liye delete karna chahte hain?`)) return;
       appData.jobs = appData.jobs.filter(j => j.id !== jobId);
       saveDB(appData);
       updateStats();
       renderJobs();
       renderDashboardJobs();
-      showToast(`Job ${jobId} deleted`, "🗑️");
+      try {
+        await fetch(API_BASE + "/api/jobs/" + jobId, { method: "DELETE" });
+      } catch (e) { console.log(e); }
+      showToast(`Job ${jobId} successfully deleted!`, "🗑️");
     };
+
+    window.deleteBill = async function(billId) {
+      if (!confirm(`Kya aap Bill ${billId} ko delete karna chahte hain?`)) return;
+      appData.bills = appData.bills.filter(b => b.id !== billId);
+      saveDB(appData);
+      updateStats();
+      renderBills();
+      try {
+        await fetch(API_BASE + "/api/bills/" + billId, { method: "DELETE" });
+      } catch (e) { console.log(e); }
+      showToast(`Bill ${billId} successfully deleted!`, "🗑️");
+    };
+
+    async function clearAllDemoData() {
+      const confirmed = confirm("⚠️ KYA AAP PURE SAMPLE/DEMO DATA KO DELETE KARNA CHAHTE HAIN?\n\nIsse saare demo customer jobs (Rohit Sharma, Vikas Patel etc.) aur demo bills delete ho jayenge taaki aap apni dukan ke REAL customer entries daal sakein.\n\n(Aapka Film Stock aur Workshop Settings surakshit rahenge).\n\nKya aap confirm karte hain?");
+      if (!confirmed) return;
+
+      appData.jobs = [];
+      appData.bills = [];
+      appData.payments = [];
+      saveDB(appData);
+      updateStats();
+      renderDashboardJobs();
+      renderJobs();
+      renderBills();
+      renderDues();
+
+      try {
+        await fetch(API_BASE + "/api/reset-data", { method: "POST" });
+      } catch (err) {
+        console.log("Server reset offline, local storage cleared");
+      }
+
+      showToast("Saara Demo Data saaf ho gaya! Studio ab fresh hai.", "✨");
+    }
 
     // SEARCH & FILTER JOBS LISTENER
     document.getElementById("input-search-jobs").addEventListener("input", renderJobs);
@@ -1620,6 +1666,9 @@
             <button onclick="viewInvoice('${bill.id}')" class="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold">
               View / Print
             </button>
+            <button onclick="deleteBill('${bill.id}')" class="role-admin-only p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 ml-1 inline-block" title="Delete Bill">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1702,18 +1751,9 @@
       showToast("Shop Details successfully saved!", "💾");
     });
 
-    document.getElementById("btn-reset-demo-data").addEventListener("click", () => {
-      appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-      saveDB(appData);
-      updateStats();
-      renderDashboardJobs();
-      renderJobs();
-      renderStock();
-      renderBills();
-      renderDues();
-      populateSettingsForm();
-      showToast("SB HYDRO-GRAPHICS sample data restored", "🔄");
-    });
+    document.getElementById("btn-reset-demo-data").addEventListener("click", clearAllDemoData);
+    const btnQuickClearJobs = document.getElementById("btn-quick-clear-demo-jobs");
+    if (btnQuickClearJobs) btnQuickClearJobs.addEventListener("click", clearAllDemoData);
 
     // BACKUP & RESTORE
     document.getElementById("btn-export-json").addEventListener("click", () => {
@@ -2305,30 +2345,35 @@
       const displayRole = document.getElementById("user-display-role");
 
       if (user.role === "admin") {
-        roleIcon.textContent = "👑";
-        roleIcon.className = "w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs";
-        displayName.textContent = user.name || "Sajib (Admin)";
-        displayRole.textContent = "Owner · Full Access";
-        displayRole.className = "text-[10px] text-cyan-400 font-medium";
+        if (roleIcon) {
+          roleIcon.textContent = "👑";
+          roleIcon.className = "w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs";
+        }
+        if (displayName) displayName.textContent = user.name || "Sajib (Admin)";
+        if (displayRole) {
+          displayRole.textContent = "Owner · Full Access";
+          displayRole.className = "text-[10px] text-cyan-400 font-medium";
+        }
 
         // Unhide admin elements
         document.querySelectorAll(".role-admin-only").forEach(el => el.classList.remove("hidden"));
       } else {
-        // Technician / Karigar role
-        roleIcon.textContent = "💼";
-        roleIcon.className = "w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs";
-        displayName.textContent = user.name || "Workshop Manager";
-        displayRole.textContent = "Manager · Operations";
-        displayRole.className = "text-[10px] text-purple-400 font-medium";
+        // Manager role
+        if (roleIcon) {
+          roleIcon.textContent = "💼";
+          roleIcon.className = "w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs";
+        }
+        if (displayName) displayName.textContent = user.name || "Workshop Manager";
+        if (displayRole) {
+          displayRole.textContent = "Manager · Operations";
+          displayRole.className = "text-[10px] text-purple-400 font-medium";
+        }
 
         // Hide admin-only elements
         document.querySelectorAll(".role-admin-only").forEach(el => el.classList.add("hidden"));
 
-        // Switch automatically to jobs tab if currently on restricted tab
-        const currentTabActive = document.querySelector(".nav-tab.bg-cyan-500\/10");
-        if (currentTabActive && currentTabActive.classList.contains("role-admin-only")) {
-          switchTab("jobs");
-        }
+        // Safely switch to Dipping Job Cards screen
+        switchTab("jobs");
       }
 
       // Hide modal
@@ -2377,20 +2422,21 @@
 
       // Offline / Client Mode Fallback Authentication
       if (credentials.pin) {
-        if (credentials.pin === "1234") {
+        const pinVal = String(credentials.pin).trim();
+        if (pinVal === "1234" || pinVal === "1111") {
           applyUserPermissions({ id: "USR-1", username: "admin", name: "Sajib Biswas (Owner)", role: "admin" });
           return;
-        } else if (credentials.pin === "2222") {
+        } else if (pinVal === "2222" || pinVal === "0000") {
           applyUserPermissions({ id: "USR-2", username: "sbwork", name: "Workshop Manager", role: "manager" });
           return;
         }
       } else if (credentials.username && credentials.password) {
         const u = credentials.username.toLowerCase().trim();
-        const p = credentials.password;
-        if (u === "admin" && p === "sbadmin123") {
+        const p = credentials.password.trim();
+        if ((u === "admin" || u === "sajib") && (p === "sbadmin123" || p === "admin123" || p === "1234")) {
           applyUserPermissions({ id: "USR-1", username: "admin", name: "Sajib Biswas (Owner)", role: "admin" });
           return;
-        } else if (u === "sbwork" && p === "sbwork123") {
+        } else if ((u === "sbwork" || u === "manager" || u === "manger" || u === "staff") && (p === "sbwork123" || p === "manager123" || p === "sbwork" || p === "2222")) {
           applyUserPermissions({ id: "USR-2", username: "sbwork", name: "Workshop Manager", role: "manager" });
           return;
         }

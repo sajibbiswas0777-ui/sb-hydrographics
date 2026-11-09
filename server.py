@@ -419,6 +419,16 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": True, "message": "Backup restored"}).encode())
                 return
 
+        # 12. Clear All Demo Records (Start Fresh Workshop)
+        if path == "/api/reset-data":
+            data["jobs"] = []
+            data["bills"] = []
+            data["payments"] = []
+            db.save_db(data)
+            self._set_headers(200)
+            self.wfile.write(json.dumps({"success": True, "message": "Demo data cleared successfully"}).encode())
+            return
+
         self._set_headers(404)
         self.wfile.write(json.dumps({"error": "Endpoint not found"}).encode())
 
@@ -441,6 +451,14 @@ class HydroHandler(http.server.SimpleHTTPRequestHandler):
             db.save_db(data)
             self._set_headers(200)
             self.wfile.write(json.dumps({"success": True, "deleted_id": stock_id}).encode())
+            return
+
+        if path.startswith("/api/bills/"):
+            bill_id = path.split("/")[3]
+            data["bills"] = [b for b in data["bills"] if b["id"] != bill_id]
+            db.save_db(data)
+            self._set_headers(200)
+            self.wfile.write(json.dumps({"success": True, "deleted_id": bill_id}).encode())
             return
 
         self._set_headers(404)
