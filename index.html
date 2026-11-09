@@ -601,11 +601,11 @@
 
           <div class="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-xl bg-slate-950 border border-slate-800">
             <div id="gbp-qr-container" class="w-32 h-32 shrink-0 bg-white rounded-xl p-2 flex items-center justify-center shadow-lg">
-              <img id="gbp-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://search.google.com/local/writereview" alt="Google Review QR Code" class="w-full h-full object-contain">
+              <img id="gbp-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fg.page%2Fr%2FCXJVrM2TE-JlEBI%2Freview" alt="Google Review QR Code" class="w-full h-full object-contain">
             </div>
             <div class="space-y-2 text-center sm:text-left">
               <div class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Live Review Link</div>
-              <input id="gbp-input-link" type="text" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-400" placeholder="https://g.page/r/.../review">
+              <input id="gbp-input-link" type="text" value="https://g.page/r/CXJVrM2TE-JlEBI/review" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-400" placeholder="https://g.page/r/.../review">
               <div class="flex flex-wrap gap-2 pt-1 justify-center sm:justify-start">
                 <button id="btn-save-gbp-link" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all">
                   Save Link
@@ -792,7 +792,7 @@
                   <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                   Google Business Profile (GBP) Review Link
                 </label>
-                <input id="setting-google-review-link" type="text" placeholder="e.g. https://g.page/r/your-id/review ya Google Maps link" class="w-full px-4 py-2.5 bg-slate-950 border border-emerald-500/40 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-400">
+                <input id="setting-google-review-link" type="text" value="https://g.page/r/CXJVrM2TE-JlEBI/review" placeholder="e.g. https://g.page/r/your-id/review ya Google Maps link" class="w-full px-4 py-2.5 bg-slate-950 border border-emerald-500/40 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-400">
                 <p class="text-[11px] text-slate-400 mt-1">Yeh link job delivery par customer ko WhatsApp par 5-star review mangne ke liye auto-send hota hai.</p>
               </div>
               <div>
@@ -1266,7 +1266,7 @@
         owner: "Sajib Biswas",
         upiId: "sbhydro@okhdfcbank",
         terms: "1. 1-Year coating warranty against peel-off under regular automotive use. 2. Clean surface with soft microfiber cloth. Do not use industrial acids or steel brushes.",
-        googleReviewLink: "https://search.google.com/local/writereview?placeid=sb_hydrographics_barrackpore"
+        googleReviewLink: "https://g.page/r/CXJVrM2TE-JlEBI/review"
       },
       jobs: [
         {
@@ -2560,7 +2560,7 @@
       const job = appData.jobs.find(j => j.id === jobId);
       if (!job) return;
 
-      const reviewLink = appData.settings.googleReviewLink || appData.settings.google_review_link || "https://search.google.com/local/writereview";
+      const reviewLink = appData.settings.googleReviewLink || appData.settings.google_review_link || "https://g.page/r/CXJVrM2TE-JlEBI/review";
       const cleanPhone = (job.phone || "").replace(/\D/g, "");
       const phoneParam = cleanPhone.length === 10 ? ("91" + cleanPhone) : cleanPhone;
 
@@ -2572,7 +2572,7 @@
 
     function initGbpTab() {
       const gbpLinkInput = document.getElementById("gbp-input-link");
-      const currentLink = appData.settings.googleReviewLink || appData.settings.google_review_link || "https://search.google.com/local/writereview";
+      const currentLink = appData.settings.googleReviewLink || appData.settings.google_review_link || "https://g.page/r/CXJVrM2TE-JlEBI/review";
       if (gbpLinkInput) gbpLinkInput.value = currentLink;
 
       const qrImg = document.getElementById("gbp-qr-img");
