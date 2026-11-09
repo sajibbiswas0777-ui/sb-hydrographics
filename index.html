@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SB HYDRO-GRAPHICS · Studio Management & Billing Panel</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Rajdhani', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfeff',
+              100: '#cffafe',
+              200: '#a5f3fc',
+              300: '#67e8f9',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+              800: '#155e75',
+              900: '#164e63',
+            },
+            carbon: {
+              900: '#0d1117',
+              800: '#161b22',
+              700: '#21262d',
+              600: '#30363d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    .carbon-pattern {
+      background-color: #0b0f17;
+      background-image: radial-gradient(#1f293d 0.75px, transparent 0.75px), radial-gradient(#1f293d 0.75px, #0b0f17 0.75px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #111827;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- TOP NOTIFICATION TOAST -->
+  <div id="toast" class="fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-[-120%] opacity-0 pointer-events-none flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-semibold">
+    <span id="toast-icon">✨</span>
+    <span id="toast-msg">Operation successful</span>
+  </div>
+
+  <!-- MAIN HEADER / NAVBAR -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        
+        <!-- BRAND LOGO & TITLE -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-cyan-600 via-sky-400 to-indigo-500 p-0.5 shadow-lg shadow-cyan-500/20 flex items-center justify-center">
+            <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+              <span class="font-display font-black text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-sky-200">SB</span>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-display text-xl sm:text-2xl font-black tracking-wider text-white">SB HYDRO-GRAPHICS</h1>
+              <span class="hidden sm:inline-block px-2 py-0.5 text-[10px] uppercase font-bold tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-md">Pro Studio</span>
+            </div>
+            <p class="text-xs text-slate-400 font-medium hidden sm:block">Water Transfer Printing · Hydro Dipping · Custom Coating</p>
+          </div>
+        </div>
+
+        <!-- QUICK ACTION BUTTONS & SYNC STATUS -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Studio Live Mode</span>
+          </div>
+
+          <button id="btn-quick-new-job" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-1.5 active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            <span>Naya Job Card</span>
+          </button>
+
+          <button id="btn-quick-new-bill" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 active:scale-95">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="hidden sm:inline">New Bill</span>
+            <span class="sm:hidden">Bill</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- NAVIGATION TABS -->
+      <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto pb-2 scrollbar-none border-t border-slate-800/80 pt-2 text-xs sm:text-sm font-semibold">
+        <button data-tab="dashboard" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          Dashboard
+        </button>
+        <button data-tab="jobs" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Dipping Job Cards
+          <span id="badge-active-jobs" class="px-1.5 py-0.2 rounded-full text-[10px] bg-cyan-500 text-slate-950 font-black">0</span>
+        </button>
+        <button data-tab="stock" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Films & Chemical Stock
+        </button>
+        <button data-tab="bills" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"/></svg>
+          Bills & Invoices
+        </button>
+        <button data-tab="dues" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Customer Dues
+          <span id="badge-dues-count" class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-slate-950 font-black">0</span>
+        </button>
+        <button data-tab="settings" class="nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Shop Details & Settings
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN BODY CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+
+      <!-- HERO BANNER -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-cyan-950 border border-slate-700/60 p-6 sm:p-8 shadow-2xl">
+        <div class="absolute -right-10 -bottom-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
+              <span>🌊 Complete Water Transfer & Custom Styling ERP</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-display font-black text-white">SB HYDRO-GRAPHICS · Control Panel</h2>
+            <p class="text-sm text-slate-300">
+              Hydro dipping job cards, film rolls inventory, 6-stage surface prep & coating pipeline, GST billing, and customer dues tracker.
+            </p>
+            <div class="pt-2 flex flex-wrap gap-3">
+              <button id="btn-hero-new-job" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>New Job Work</span>
+              </button>
+              <button id="btn-hero-add-film" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <span>Add Film Roll</span>
+              </button>
+            </div>
+          </div>
+          <div class="w-full md:w-72 flex-shrink-0">
+            <div class="relative group rounded-xl overflow-hidden border border-cyan-500/30 shadow-xl shadow-cyan-950/50">
+              <img src="user_uploaded_files/ttl=63d/tool_generated/watermarked_img_12529150302042579584.jpg" alt="SB Hydrographics Studio Showcase" class="w-full h-36 sm:h-40 object-cover group-hover:scale-105 transition-transform duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-2.5">
+                <span class="text-[11px] font-bold text-cyan-300 tracking-wide uppercase">Water Transfer & Carbon Finish</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METRIC CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        
+        <!-- Card 1: Today's Sales -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-cyan-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Today's Sales</span>
+            <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div id="stat-today-sales" class="text-2xl sm:text-3xl font-black text-white font-display">₹0</div>
+          <p class="text-xs text-slate-400 mt-2">Dipping jobs & retail billing</p>
+        </div>
+
+        <!-- Card 2: Active Dipping Jobs -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-sky-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Active Dipping Jobs</span>
+            <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+          </div>
+          <div id="stat-active-jobs" class="text-2xl sm:text-3xl font-black text-white font-display">0</div>
+          <p class="text-xs text-sky-400 mt-2 flex items-center gap-1">
+            <span id="stat-ready-jobs">0</span> items ready for delivery
+          </p>
+        </div>
+
+        <!-- Card 3: Films in Stock -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-purple-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Films & Chemicals</span>
+            <div class="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+            </div>
+          </div>
+          <div id="stat-stock-count" class="text-2xl sm:text-3xl font-black text-white font-display">0</div>
+          <p class="text-xs text-purple-300 mt-2"><span id="stat-film-meters">0</span> meters film available</p>
+        </div>
+
+        <!-- Card 4: Pending Dues -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-amber-500/50 transition-all">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Pending Dues</span>
+            <div class="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+          </div>
+          <div id="stat-pending-dues" class="text-2xl sm:text-3xl font-black text-amber-400 font-display">₹0</div>
+          <p class="text-xs text-amber-300 mt-2"><span id="stat-dues-clients">0</span> customers with balance</p>
+        </div>
+
+      </div>
+
+      <!-- CHARTS SECTION -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Chart 1: Revenue (Last 7 Days) -->
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-white text-base">Studio Revenue (Last 7 Days)</h3>
+              <p class="text-xs text-slate-400">Daily collections from custom dipping & invoices</p>
+            </div>
+            <span class="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">₹ Trends</span>
+          </div>
+          <div class="relative h-64">
+            <canvas id="chart-sales"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Popular Patterns -->
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-white text-base">Popular Dipping Patterns</h3>
+              <p class="text-xs text-slate-400">Carbon Fiber, Camouflage, Woodgrain, Skulls & Marble</p>
+            </div>
+            <span class="text-xs font-bold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">Volume</span>
+          </div>
+          <div class="relative h-64">
+            <canvas id="chart-patterns"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- QUICK JOBS PIPELINE OVERVIEW -->
+      <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+              <span>Current Studio Workshop Pipeline</span>
+              <span class="text-xs font-normal text-slate-400">(Live Dipping Stages)</span>
+            </h3>
+            <p class="text-xs text-slate-400">Items undergoing sanding, primer base coat, dipping, clear coat and quality check</p>
+          </div>
+          <button id="btn-view-all-jobs" class="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+            View All Job Cards &rarr;
+          </button>
+        </div>
+
+        <div id="dashboard-jobs-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: DIPPING JOB CARDS ==================== -->
+    <section id="tab-jobs" class="tab-content hidden space-y-6">
+
+      <!-- TOOLBAR -->
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="flex flex-1 items-center gap-3">
+          <div class="relative flex-1 max-w-md">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input id="input-search-jobs" type="text" placeholder="Search by customer name, phone, item, pattern..." class="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+          </div>
+          <select id="select-filter-stage" class="bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-500">
+            <option value="ALL">All Stages</option>
+            <option value="RECEIVED">1. Received & Inspected</option>
+            <option value="PREP">2. Sanding & Surface Prep</option>
+            <option value="BASE_COAT">3. Base Coat Applied</option>
+            <option value="DIPPED">4. Hydro Dipped & Washed</option>
+            <option value="CLEAR_COAT">5. 2K Clear Coat & Curing</option>
+            <option value="READY">6. Ready for Delivery</option>
+            <option value="DELIVERED">Delivered</option>
+          </select>
+        </div>
+
+        <button id="btn-create-job-modal" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>Naya Hydro Dipping Job Card</span>
+        </button>
+      </div>
+
+      <!-- JOBS GRID / LIST -->
+      <div id="jobs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div id="jobs-empty-state" class="hidden text-center py-16 px-4 rounded-2xl bg-slate-900/50 border border-dashed border-slate-800">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        </div>
+        <h4 class="text-lg font-bold text-white">No Hydro Dipping Jobs Found</h4>
+        <p class="text-sm text-slate-400 mt-1">Start by creating a new customer job card for bike tanks, helmets, alloy wheels, or interior trim.</p>
+        <button id="btn-empty-create-job" class="mt-4 px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs">Create First Job</button>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 3: STOCK & INVENTORY ==================== -->
+    <section id="tab-stock" class="tab-content hidden space-y-6">
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="flex items-center gap-3 flex-1">
+          <div class="relative flex-1 max-w-sm">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input id="input-search-stock" type="text" placeholder="Search film pattern, chemical, activator..." class="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+          </div>
+          <select id="select-filter-stock-category" class="bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-500">
+            <option value="ALL">All Categories</option>
+            <option value="FILM">Hydrographic Films</option>
+            <option value="CHEMICAL">Activator & Chemicals</option>
+            <option value="PAINT">Base Paints & 2K Clear</option>
+            <option value="RETAIL">Pre-Dipped Retail Items</option>
+          </select>
+        </div>
+
+        <button id="btn-add-stock-modal" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>Add Stock / Raw Material</span>
+        </button>
+      </div>
+
+      <!-- INVENTORY TABLE -->
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="px-6 py-4">Item Name / Pattern</th>
+                <th class="px-6 py-4">Category</th>
+                <th class="px-6 py-4">Item Code</th>
+                <th class="px-6 py-4">Available Quantity</th>
+                <th class="px-6 py-4">Unit Cost / Price</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="stock-table-body" class="divide-y divide-slate-800/60 font-medium">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 4: BILLS & INVOICES ==================== -->
+    <section id="tab-bills" class="tab-content hidden space-y-6">
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="relative flex-1 max-w-md">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input id="input-search-bills" type="text" placeholder="Search bill number, customer name, mobile..." class="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <button id="btn-create-bill-modal" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span>Create New Invoice / Bill</span>
+        </button>
+      </div>
+
+      <!-- INVOICES TABLE -->
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="px-6 py-4">Invoice #</th>
+                <th class="px-6 py-4">Date</th>
+                <th class="px-6 py-4">Customer Details</th>
+                <th class="px-6 py-4">Services / Job</th>
+                <th class="px-6 py-4">Total Amount</th>
+                <th class="px-6 py-4">Payment Status</th>
+                <th class="px-6 py-4 text-right">Invoice Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bills-table-body" class="divide-y divide-slate-800/60 font-medium">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 5: CUSTOMER DUES ==================== -->
+    <section id="tab-dues" class="tab-content hidden space-y-6">
+
+      <!-- SUMMARY HEADER -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 shadow-xl">
+          <span class="text-xs uppercase font-bold text-amber-400 tracking-wider">Total Pending Balance</span>
+          <div id="dues-total-amount" class="text-3xl font-black text-amber-400 font-display mt-2">₹0</div>
+          <p class="text-xs text-slate-400 mt-1">Pending payments from completed & active jobs</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+          <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">Customers with Dues</span>
+          <div id="dues-total-clients" class="text-3xl font-black text-white font-display mt-2">0</div>
+          <p class="text-xs text-slate-400 mt-1">Clients with pending payment balances</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col justify-center">
+          <span class="text-xs uppercase font-bold text-cyan-400 tracking-wider">WhatsApp Follow-up</span>
+          <p class="text-xs text-slate-300 mt-2">Send payment reminder message directly on customer's WhatsApp with 1-click!</p>
+        </div>
+      </div>
+
+      <!-- DUES TABLE -->
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="px-6 py-4">Customer</th>
+                <th class="px-6 py-4">Phone / Contact</th>
+                <th class="px-6 py-4">Linked Job / Item</th>
+                <th class="px-6 py-4">Total Bill</th>
+                <th class="px-6 py-4">Advance Paid</th>
+                <th class="px-6 py-4">Balance Due</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dues-table-body" class="divide-y divide-slate-800/60 font-medium">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 6: SHOP DETAILS & SETTINGS ==================== -->
+    <section id="tab-settings" class="tab-content hidden space-y-6">
+
+      <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+        <div class="max-w-3xl space-y-6">
+          <div>
+            <h3 class="text-xl font-display font-black text-white">Studio Details (Invoice par chhapega)</h3>
+            <p class="text-sm text-slate-400">Yeh jaankari aapke printing invoices aur bills par print hogi.</p>
+          </div>
+
+          <form id="form-shop-settings" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Studio / Business Name</label>
+                <input id="setting-shop-name" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500 font-bold" required>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Tagline / Specialization</label>
+                <input id="setting-tagline" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Mobile / WhatsApp Number</label>
+                <input id="setting-phone" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">GSTIN / Registration Number</label>
+                <input id="setting-gstin" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Studio Workshop Address</label>
+              <textarea id="setting-address" rows="2" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">UPI ID for Invoice QR / Payments</label>
+                <input id="setting-upi-id" type="text" placeholder="e.g. sbhydro@okhdfcbank" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Owner / Manager Name</label>
+                <input id="setting-owner" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Invoice Terms & Coating Warranty Note</label>
+              <textarea id="setting-terms" rows="2" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+            </div>
+
+            <div class="pt-2 flex items-center justify-between">
+              <button type="submit" class="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all">
+                Save Studio Settings
+              </button>
+
+              <button type="button" id="btn-reset-demo-data" class="text-xs text-rose-400 hover:underline">
+                Reset Sample Demo Data
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- BACKUP & RESTORE DATA -->
+      <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+        <h4 class="font-bold text-white text-base mb-2">Data Backup & Restore</h4>
+        <p class="text-xs text-slate-400 mb-4">Aap apne sare jobs, stock aur bills ka JSON backup download karke safe rakh sakte hain.</p>
+        <div class="flex flex-wrap gap-3">
+          <button id="btn-export-json" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-2">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Download Backup (JSON)</span>
+          </button>
+          <label class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <span>Restore Backup</span>
+            <input type="file" id="input-restore-file" accept=".json" class="hidden">
+          </label>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL 1: NEW HYDRO JOB CARD ==================== -->
+  <div id="modal-job" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative my-8">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div>
+          <h3 id="modal-job-title" class="text-xl font-display font-black text-white">Naya Hydro Dipping Job Card</h3>
+          <p class="text-xs text-slate-400">Custom water transfer printing work order entry</p>
+        </div>
+        <button id="btn-close-job-modal" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="form-job" class="mt-4 space-y-4">
+        <input type="hidden" id="job-form-id">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Customer Name *</label>
+            <input id="job-cust-name" type="text" placeholder="e.g. Rohit Sharma" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Customer Mobile / WhatsApp *</label>
+            <input id="job-cust-phone" type="text" placeholder="e.g. 9876543210" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Item to be Dipped *</label>
+            <input id="job-item-name" type="text" placeholder="e.g. Royal Enfield Petrol Tank, 4x Rims, PS5 Body" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Vehicle / Model Reference</label>
+            <input id="job-vehicle-ref" type="text" placeholder="e.g. Classic 350 / Mahindra Thar / Custom" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Hydro Film Pattern *</label>
+            <select id="job-pattern" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+              <option value="3D Twill Carbon Fiber">3D Twill Carbon Fiber</option>
+              <option value="Forged Carbon Fiber">Forged Carbon Fiber</option>
+              <option value="Army Camouflage">Army Green Camouflage</option>
+              <option value="Digital Arctic Camo">Digital Arctic Camo</option>
+              <option value="Reaper Flaming Skulls">Reaper Flaming Skulls</option>
+              <option value="Dark Walnut Burl Wood">Dark Walnut Burl Wood</option>
+              <option value="Golden Vein White Marble">Golden Vein White Marble</option>
+              <option value="Illusion Honeycomb Hex">Illusion Honeycomb Hex</option>
+              <option value="Sticker Bomb Anime">Sticker Bomb / Anime</option>
+              <option value="Custom Pattern Dip">Custom Customer Film</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Base Primer / Color</label>
+            <select id="job-base-color" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="Jet Black">Jet Black (Standard for Carbon)</option>
+              <option value="Ghost White">Ghost White (Bright pop)</option>
+              <option value="Metallic Silver">Metallic Silver</option>
+              <option value="Candy Red Base">Candy Red Base</option>
+              <option value="Army Olive Drab">Army Olive Drab</option>
+              <option value="Custom Tint">Custom Color Tint</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Clear Coat Finish</label>
+            <select id="job-clear-coat" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="2K High Gloss Mirror">2K High Gloss Mirror</option>
+              <option value="Satin Matte Stealth">Satin Matte Stealth</option>
+              <option value="Ceramic Shield Pro">Ceramic Shield Pro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Total Agreed Amount (₹) *</label>
+            <input id="job-total-amt" type="number" min="0" placeholder="e.g. 4500" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500 font-bold" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Advance Received (₹)</label>
+            <input id="job-advance-amt" type="number" min="0" placeholder="e.g. 2000" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Initial Stage</label>
+            <select id="job-stage" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="RECEIVED">1. Received & Inspected</option>
+              <option value="PREP">2. Sanding & Surface Prep</option>
+              <option value="BASE_COAT">3. Base Coat Applied</option>
+              <option value="DIPPED">4. Hydro Dipped & Washed</option>
+              <option value="CLEAR_COAT">5. 2K Clear Coat & Curing</option>
+              <option value="READY">6. Ready for Delivery</option>
+              <option value="DELIVERED">Delivered</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Specific Instructions / Damage Notes</label>
+          <textarea id="job-notes" rows="2" placeholder="e.g. Minor scratches on left side filled; customer wants extra high gloss bake" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <button type="button" id="btn-cancel-job-modal" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm font-semibold">Cancel</button>
+          <button type="submit" class="px-6 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25">Save Job Card</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: ADD STOCK ITEM ==================== -->
+  <div id="modal-stock" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div>
+          <h3 class="text-xl font-display font-black text-white">Add Raw Material / Stock</h3>
+          <p class="text-xs text-slate-400">Hydro dipping film, activator, clear coat or retail item</p>
+        </div>
+        <button id="btn-close-stock-modal" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="form-stock" class="mt-4 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Item / Pattern Name *</label>
+          <input id="stock-name" type="text" placeholder="e.g. 4D Forged Carbon Film Roll" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Category *</label>
+            <select id="stock-cat" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="FILM">Hydrographic Film</option>
+              <option value="CHEMICAL">Activator Chemical</option>
+              <option value="PAINT">Base Paint & 2K Clear</option>
+              <option value="RETAIL">Pre-Dipped Retail Item</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">SKU / Item Code</label>
+            <input id="stock-sku" type="text" placeholder="e.g. SB-CF-04" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Quantity Available *</label>
+            <input id="stock-qty" type="number" step="0.5" min="0" placeholder="e.g. 25 (meters/liters)" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Unit Type</label>
+            <select id="stock-unit" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="Meters">Meters (Roll)</option>
+              <option value="Liters">Liters</option>
+              <option value="Cans">Spray Cans</option>
+              <option value="Pcs">Pieces</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Cost / Selling Price (₹)</label>
+          <input id="stock-price" type="number" min="0" placeholder="e.g. 350 per meter" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <button type="button" id="btn-cancel-stock-modal" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm font-semibold">Cancel</button>
+          <button type="submit" class="px-6 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25">Add to Stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: CREATE BILL / INVOICE ==================== -->
+  <div id="modal-bill" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative my-8">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div>
+          <h3 class="text-xl font-display font-black text-white">Create New Bill / Tax Invoice</h3>
+          <p class="text-xs text-slate-400">Generate invoice for custom hydro dipping & coatings</p>
+        </div>
+        <button id="btn-close-bill-modal" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="form-bill" class="mt-4 space-y-4">
+        <!-- Customer Details -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Customer Name *</label>
+            <input id="bill-cust-name" type="text" placeholder="Customer name" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Mobile / WhatsApp *</label>
+            <input id="bill-cust-phone" type="text" placeholder="Mobile number" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Auto-link from Job Card (Optional)</label>
+          <select id="bill-link-job" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+            <option value="">-- Direct Customer Walk-in / Retail --</option>
+          </select>
+        </div>
+
+        <!-- Line Items -->
+        <div class="space-y-3 pt-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-semibold text-slate-300 uppercase">Service & Material Items</label>
+            <button type="button" id="btn-add-bill-row" class="text-xs text-cyan-400 hover:underline font-bold">+ Add Line Item</button>
+          </div>
+          <div id="bill-items-list" class="space-y-2">
+            <!-- Dynamic Rows -->
+          </div>
+        </div>
+
+        <!-- Calculations -->
+        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-sm">
+          <div class="flex justify-between text-slate-400">
+            <span>Subtotal:</span>
+            <span id="bill-calc-subtotal" class="font-bold text-white">₹0</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-400">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="bill-gst-toggle" class="w-4 h-4 rounded text-cyan-500 bg-slate-900 border-slate-700">
+              <span>Apply 18% GST (Tax Invoice)</span>
+            </label>
+            <span id="bill-calc-gst" class="font-bold text-white">₹0</span>
+          </div>
+          <div class="flex justify-between text-base font-black text-cyan-400 pt-2 border-t border-slate-800">
+            <span>Grand Total:</span>
+            <span id="bill-calc-grandtotal" class="text-lg">₹0</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Amount Received Now (₹) *</label>
+            <input id="bill-received-amt" type="number" min="0" placeholder="0" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500 font-bold" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Payment Method</label>
+            <select id="bill-payment-method" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="UPI / QR">UPI (GPay / PhonePe / Paytm)</option>
+              <option value="Cash">Cash</option>
+              <option value="Debit / Credit Card">Debit / Credit Card</option>
+              <option value="Bank Transfer">Bank Transfer / IMPS</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <button type="button" id="btn-cancel-bill-modal" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm font-semibold">Cancel</button>
+          <button type="submit" class="px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25">Generate Bill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: RECORD PAYMENT ==================== -->
+  <div id="modal-payment" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <h3 class="text-lg font-display font-black text-white">Receive Due Payment</h3>
+        <button id="btn-close-payment-modal" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="form-collect-payment" class="mt-4 space-y-4">
+        <input type="hidden" id="payment-job-id">
+        <div>
+          <span class="text-xs text-slate-400">Customer:</span>
+          <div id="payment-cust-display" class="font-bold text-white text-base">Rohit Sharma</div>
+        </div>
+        <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+          <span class="text-xs text-amber-400 font-semibold">Outstanding Balance:</span>
+          <div id="payment-balance-display" class="text-2xl font-black text-amber-400 font-display">₹2,500</div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Payment Amount Received (₹) *</label>
+          <input id="payment-amount" type="number" min="1" class="w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500 font-bold" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Payment Mode</label>
+          <select id="payment-mode" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+            <option value="UPI">UPI (GPay / PhonePe / Paytm)</option>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" id="btn-cancel-payment-modal" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm font-semibold">Cancel</button>
+          <button type="submit" class="px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Save Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 5: PRINTABLE INVOICE ==================== -->
+  <div id="modal-invoice-view" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-8 shadow-2xl relative my-8">
+      
+      <!-- Top Action bar (Hidden on print) -->
+      <div class="no-print flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Invoice Preview</span>
+        <div class="flex items-center gap-2">
+          <button id="btn-print-invoice-action" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 shadow">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            <span>Print Invoice</span>
+          </button>
+          <button id="btn-close-invoice-modal" class="p-2 text-slate-400 hover:text-slate-700 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- PRINTABLE DOCUMENT -->
+      <div id="print-area" class="space-y-6">
+        <!-- Header -->
+        <div class="flex justify-between items-start border-b-2 border-slate-900 pb-6">
+          <div>
+            <h1 id="inv-shop-name" class="font-display font-black text-2xl tracking-wider text-slate-950">SB HYDRO-GRAPHICS</h1>
+            <p id="inv-shop-tagline" class="text-xs text-slate-600 font-medium">Water Transfer Printing & Custom Coating Studio</p>
+            <p id="inv-shop-address" class="text-xs text-slate-500 mt-1 max-w-sm">Workshop No. 4, Auto Custom Zone, Main Highway</p>
+            <p id="inv-shop-contact" class="text-xs text-slate-500 font-semibold mt-0.5">Phone: +91 98765 43210</p>
+            <p id="inv-shop-gstin" class="text-xs text-slate-500">GSTIN: 27AABCS1234F1Z5</p>
+          </div>
+          <div class="text-right">
+            <div class="inline-block bg-slate-950 text-white font-black text-sm px-3 py-1 rounded">TAX INVOICE</div>
+            <div class="text-xs font-bold text-slate-800 mt-2">Invoice #: <span id="inv-number" class="font-mono">SBH-INV-1001</span></div>
+            <div class="text-xs text-slate-600">Date: <span id="inv-date">09/11/2026</span></div>
+          </div>
+        </div>
+
+        <!-- Billed to -->
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div>
+            <span class="font-bold text-slate-500 uppercase tracking-wider block mb-1">Billed To (Customer):</span>
+            <div id="inv-cust-name" class="font-bold text-slate-900 text-sm">Rohit Sharma</div>
+            <div id="inv-cust-phone" class="text-slate-600">Mobile: +91 9876543210</div>
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-slate-500 uppercase tracking-wider block mb-1">Payment Method:</span>
+            <div id="inv-pay-mode" class="font-bold text-slate-900">UPI / QR Code</div>
+            <div class="text-slate-600 mt-1">UPI ID: <span id="inv-shop-upi" class="font-mono">sbhydro@okhdfcbank</span></div>
+          </div>
+        </div>
+
+        <!-- Itemized Table -->
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-y border-slate-300 bg-slate-100 text-slate-700 font-bold uppercase tracking-wider">
+              <th class="py-2.5 px-2">#</th>
+              <th class="py-2.5 px-2">Description / Dipping Service</th>
+              <th class="py-2.5 px-2 text-center">Qty</th>
+              <th class="py-2.5 px-2 text-right">Rate (₹)</th>
+              <th class="py-2.5 px-2 text-right">Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="inv-items-body" class="divide-y divide-slate-200">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+
+        <!-- Totals breakdown -->
+        <div class="flex justify-end pt-2">
+          <div class="w-64 space-y-1.5 text-xs text-right">
+            <div class="flex justify-between text-slate-600">
+              <span>Subtotal:</span>
+              <span id="inv-subtotal" class="font-semibold text-slate-900">₹0</span>
+            </div>
+            <div id="inv-gst-row" class="flex justify-between text-slate-600">
+              <span>GST (18%):</span>
+              <span id="inv-gst" class="font-semibold text-slate-900">₹0</span>
+            </div>
+            <div class="flex justify-between font-black text-sm text-slate-950 pt-2 border-t border-slate-300">
+              <span>Total Invoice Amount:</span>
+              <span id="inv-total">₹0</span>
+            </div>
+            <div class="flex justify-between text-emerald-700 font-bold">
+              <span>Amount Paid:</span>
+              <span id="inv-paid">₹0</span>
+            </div>
+            <div class="flex justify-between text-amber-700 font-bold">
+              <span>Balance Due:</span>
+              <span id="inv-balance">₹0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms and Signature -->
+        <div class="border-t border-slate-200 pt-4 grid grid-cols-2 gap-4 text-[10px] text-slate-500">
+          <div>
+            <span class="font-bold uppercase text-slate-700 block mb-1">Terms & Conditions:</span>
+            <p id="inv-terms-text">1. 1-Year coating warranty against peel-off under regular washing. 2. Clean surface only with microfiber cloth. No hard acid washes.</p>
+          </div>
+          <div class="text-right flex flex-col justify-end">
+            <div class="h-10"></div>
+            <span class="font-bold text-slate-900 text-xs">For SB HYDRO-GRAPHICS</span>
+            <span class="text-slate-500">Authorized Signatory</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // INITIAL SAMPLE DATA FOR SB HYDRO-GRAPHICS
+    const DEFAULT_DATA = {
+      settings: {
+        shopName: "SB HYDRO-GRAPHICS",
+        tagline: "Professional Water Transfer Printing & Specialized Coating Studio",
+        phone: "+91 98765 43210",
+        whatsapp: "919876543210",
+        gstin: "27AABCS1234F1Z5",
+        address: "Plot 12, Automobile Craft Zone, Main Highway Road, Pune, Maharashtra - 411019",
+        owner: "S. B. Verma",
+        upiId: "sbhydro@okhdfcbank",
+        terms: "1. 1-Year coating warranty against peel-off under regular automotive use. 2. Clean surface with soft microfiber cloth. Do not use industrial acids or steel brushes."
+      },
+      jobs: [
+        {
+          id: "SBH-101",
+          customerName: "Rohit Sharma",
+          phone: "9876543210",
+          item: "Royal Enfield Classic 350 Petrol Tank & Side Panels",
+          vehicleRef: "RE Classic 350 (Black)",
+          pattern: "3D Twill Carbon Fiber",
+          baseColor: "Jet Black",
+          clearCoat: "2K High Gloss Mirror",
+          totalAmount: 4800,
+          advancePaid: 2500,
+          stage: "DIPPED",
+          notes: "Filled deep scratches on right emblem. Customer wants deep wet-look gloss clear coat.",
+          date: "2026-11-06"
+        },
+        {
+          id: "SBH-102",
+          customerName: "Vikas Patel",
+          phone: "9822012345",
+          item: "Studds Full Face Helmet + Visor Peak",
+          vehicleRef: "Bike Rider Gear",
+          pattern: "Reaper Flaming Skulls",
+          baseColor: "Candy Red Base",
+          clearCoat: "2K High Gloss Mirror",
+          totalAmount: 1800,
+          advancePaid: 1800,
+          stage: "READY",
+          notes: "Customer ready to pick up today evening.",
+          date: "2026-11-07"
+        },
+        {
+          id: "SBH-103",
+          customerName: "Amitabh Sen",
+          phone: "9833445566",
+          item: "Toyota Fortuner Dashboard & Door Trim Set (8 Pcs)",
+          vehicleRef: "Toyota Fortuner 2023",
+          pattern: "Dark Walnut Burl Wood",
+          baseColor: "Jet Black",
+          clearCoat: "Satin Matte Stealth",
+          totalAmount: 9500,
+          advancePaid: 4000,
+          stage: "BASE_COAT",
+          notes: "VIP luxury interior finish. Ensure precise wood grain alignment.",
+          date: "2026-11-08"
+        },
+        {
+          id: "SBH-104",
+          customerName: "Karan Johar",
+          phone: "9819988776",
+          item: "Yamaha R15 Front Fairing & Rear Cowl",
+          vehicleRef: "Yamaha R15 V4",
+          pattern: "Forged Carbon Fiber",
+          baseColor: "Jet Black",
+          clearCoat: "Ceramic Shield Pro",
+          totalAmount: 3800,
+          advancePaid: 1500,
+          stage: "PREP",
+          notes: "Surface sanding in progress.",
+          date: "2026-11-09"
+        }
+      ],
+      stock: [
+        { id: "STK-1", name: "3D Twill Carbon Fiber Film (100cm)", cat: "FILM", sku: "FLM-CF-01", qty: 38.5, unit: "Meters", price: 350 },
+        { id: "STK-2", name: "Forged Carbon Hydrographic Film (50cm)", cat: "FILM", sku: "FLM-FC-02", qty: 22.0, unit: "Meters", price: 420 },
+        { id: "STK-3", name: "Military Digital Camo Pattern (50cm)", cat: "FILM", sku: "FLM-CM-03", qty: 14.0, unit: "Meters", price: 320 },
+        { id: "STK-4", name: "Reaper Flame Skulls Film (50cm)", cat: "FILM", sku: "FLM-SK-04", qty: 4.5, unit: "Meters", price: 380 },
+        { id: "STK-5", name: "Dark Walnut Burl Wood Film (100cm)", cat: "FILM", sku: "FLM-WD-05", qty: 18.0, unit: "Meters", price: 400 },
+        { id: "STK-6", name: "Pro Hydro Activator Chemical (Standard)", cat: "CHEMICAL", sku: "CHM-ACT-A", qty: 8.5, unit: "Liters", price: 850 },
+        { id: "STK-7", name: "Activator Aerosol Spray Cans (400ml)", cat: "CHEMICAL", sku: "CHM-ACT-CAN", qty: 12.0, unit: "Cans", price: 450 },
+        { id: "STK-8", name: "2K High Solids Gloss Clear Coat + Hardener", cat: "PAINT", sku: "PNT-2K-GLOSS", qty: 6.0, unit: "Liters", price: 1200 },
+        { id: "STK-9", name: "Jet Black Base Coat Primer", cat: "PAINT", sku: "PNT-PRIMER-BLK", qty: 10.0, unit: "Liters", price: 750 },
+        { id: "STK-10", name: "Pre-Dipped Carbon Fiber Keychains", cat: "RETAIL", sku: "RTL-KEY-CF", qty: 35.0, unit: "Pcs", price: 199 }
+      ],
+      bills: [
+        {
+          id: "SBH-INV-1001",
+          date: "2026-11-07",
+          customerName: "Vikas Patel",
+          phone: "9822012345",
+          jobId: "SBH-102",
+          items: [
+            { desc: "Hydro Dipping: Studds Helmet (Reaper Skulls)", qty: 1, rate: 1400, amount: 1400 },
+            { desc: "2K High Gloss Ceramic Top Coat", qty: 1, rate: 400, amount: 400 }
+          ],
+          subtotal: 1800,
+          gstApplied: false,
+          gstAmount: 0,
+          total: 1800,
+          paid: 1800,
+          balance: 0,
+          paymentMode: "UPI / QR"
+        },
+        {
+          id: "SBH-INV-1002",
+          date: "2026-11-08",
+          customerName: "Anil Deshmukh",
+          phone: "9988776655",
+          jobId: "",
+          items: [
+            { desc: "Pre-Dipped Carbon Keychains (Pack of 3)", qty: 3, rate: 199, amount: 597 },
+            { desc: "Car Gear Knob Dipping Service", qty: 1, rate: 800, amount: 800 }
+          ],
+          subtotal: 1397,
+          gstApplied: true,
+          gstAmount: 251.46,
+          total: 1648.46,
+          paid: 1648.46,
+          balance: 0,
+          paymentMode: "Cash"
+        }
+      ]
+    };
+
+    // LOCAL STORAGE HANDLER
+    const DB_KEY = "sb_hydrographics_db_v1";
+    function loadDB() {
+      try {
+        const stored = localStorage.getItem(DB_KEY);
+        if (stored) return JSON.parse(stored);
+      } catch (e) {
+        console.warn("localStorage not available, using in-memory state");
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+
+    function saveDB(data) {
+      try {
+        localStorage.setItem(DB_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn("Could not save to localStorage", e);
+      }
+    }
+
+    let appData = loadDB();
+
+    // TOAST HELPER
+    function showToast(msg, icon = "✨", isError = false) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toast-msg");
+      const toastIcon = document.getElementById("toast-icon");
+      
+      toastMsg.textContent = msg;
+      toastIcon.textContent = icon;
+      
+      if (isError) {
+        toast.className = "fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-0 opacity-100 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-semibold bg-rose-950 border-rose-700 text-rose-200";
+      } else {
+        toast.className = "fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-0 opacity-100 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-semibold bg-slate-900 border-cyan-500/50 text-cyan-300 shadow-cyan-900/40";
+      }
+
+      setTimeout(() => {
+        toast.classList.add("translate-y-[-120%]", "opacity-0");
+        toast.classList.remove("translate-y-0", "opacity-100");
+      }, 3500);
+    }
+
+    // STAGE DEFINITIONS & COLORS
+    const STAGES = {
+      RECEIVED: { label: "1. Received & Inspected", color: "bg-slate-700 text-slate-200 border-slate-600", next: "PREP" },
+      PREP: { label: "2. Sanding & Prep", color: "bg-amber-500/10 text-amber-400 border-amber-500/30", next: "BASE_COAT" },
+      BASE_COAT: { label: "3. Base Coat Applied", color: "bg-blue-500/10 text-blue-400 border-blue-500/30", next: "DIPPED" },
+      DIPPED: { label: "4. Hydro Dipped & Washed", color: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30", next: "CLEAR_COAT" },
+      CLEAR_COAT: { label: "5. 2K Clear & Curing", color: "bg-purple-500/10 text-purple-400 border-purple-500/30", next: "READY" },
+      READY: { label: "6. Ready for Delivery", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30", next: "DELIVERED" },
+      DELIVERED: { label: "Delivered", color: "bg-slate-800 text-slate-400 border-slate-700", next: null }
+    };
+
+    // TAB SWITCHING
+    const tabs = document.querySelectorAll(".nav-tab");
+    const contents = document.querySelectorAll(".tab-content");
+
+    function switchTab(tabId) {
+      tabs.forEach(t => {
+        if (t.dataset.tab === tabId) {
+          t.className = "nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold";
+        } else {
+          t.className = "nav-tab px-3 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 font-semibold";
+        }
+      });
+
+      contents.forEach(c => {
+        if (c.id === `tab-${tabId}`) {
+          c.classList.remove("hidden");
+        } else {
+          c.classList.add("hidden");
+        }
+      });
+
+      if (tabId === "dashboard") renderDashboardCharts();
+      if (tabId === "jobs") renderJobs();
+      if (tabId === "stock") renderStock();
+      if (tabId === "bills") renderBills();
+      if (tabId === "dues") renderDues();
+      if (tabId === "settings") populateSettingsForm();
+    }
+
+    tabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+    document.getElementById("btn-view-all-jobs").addEventListener("click", () => switchTab("jobs"));
+
+    // CHARTS INSTANCES
+    let salesChartInstance = null;
+    let patternsChartInstance = null;
+
+    function renderDashboardCharts() {
+      // 1. Sales Trend (Last 7 Days)
+      const ctxSales = document.getElementById("chart-sales");
+      if (ctxSales) {
+        if (salesChartInstance) salesChartInstance.destroy();
+        
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const amounts = [3200, 4800, 2100, 6500, 4200, 8900, 5600];
+
+        salesChartInstance = new Chart(ctxSales, {
+          type: "line",
+          data: {
+            labels: days,
+            datasets: [{
+              label: "Daily Revenue (₹)",
+              data: amounts,
+              borderColor: "#06b6d4",
+              backgroundColor: "rgba(6, 182, 212, 0.15)",
+              borderWidth: 3,
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: "#22d3ee",
+              pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { grid: { color: "#1e293b" }, ticks: { color: "#94a3b8" } },
+              y: { grid: { color: "#1e293b" }, ticks: { color: "#94a3b8" } }
+            }
+          }
+        });
+      }
+
+      // 2. Popular Dipping Patterns
+      const ctxPatterns = document.getElementById("chart-patterns");
+      if (ctxPatterns) {
+        if (patternsChartInstance) patternsChartInstance.destroy();
+
+        patternsChartInstance = new Chart(ctxPatterns, {
+          type: "doughnut",
+          data: {
+            labels: ["3D Carbon Fiber", "Forged Carbon", "Camo Patterns", "Woodgrain", "Skulls / Flames"],
+            datasets: [{
+              data: [42, 24, 14, 12, 8],
+              backgroundColor: ["#06b6d4", "#3b82f6", "#10b981", "#f59e0b", "#ec4899"],
+              borderWidth: 2,
+              borderColor: "#0f172a"
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "right",
+                labels: { color: "#cbd5e1", boxWidth: 12, font: { size: 11 } }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // UPDATE TOP STATS
+    function updateStats() {
+      // Today sales (sum from bills of today or jobs)
+      const todayTotal = appData.bills.reduce((acc, b) => acc + (b.paid || 0), 0);
+      document.getElementById("stat-today-sales").textContent = "₹" + todayTotal.toLocaleString("en-IN");
+
+      // Active jobs (not DELIVERED)
+      const activeJobs = appData.jobs.filter(j => j.stage !== "DELIVERED");
+      document.getElementById("stat-active-jobs").textContent = activeJobs.length;
+      document.getElementById("badge-active-jobs").textContent = activeJobs.length;
+
+      const readyJobs = appData.jobs.filter(j => j.stage === "READY");
+      document.getElementById("stat-ready-jobs").textContent = readyJobs.length;
+
+      // Stock
+      document.getElementById("stat-stock-count").textContent = appData.stock.length;
+      const filmStock = appData.stock.filter(s => s.cat === "FILM").reduce((acc, s) => acc + (s.qty || 0), 0);
+      document.getElementById("stat-film-meters").textContent = filmStock.toFixed(1);
+
+      // Pending dues
+      const pendingJobsDues = appData.jobs.reduce((acc, j) => acc + Math.max(0, (j.totalAmount - j.advancePaid)), 0);
+      document.getElementById("stat-pending-dues").textContent = "₹" + pendingJobsDues.toLocaleString("en-IN");
+      
+      const dueClients = appData.jobs.filter(j => (j.totalAmount - j.advancePaid) > 0);
+      document.getElementById("stat-dues-clients").textContent = dueClients.length;
+      document.getElementById("badge-dues-count").textContent = dueClients.length;
+
+      // Dues tab metrics
+      document.getElementById("dues-total-amount").textContent = "₹" + pendingJobsDues.toLocaleString("en-IN");
+      document.getElementById("dues-total-clients").textContent = dueClients.length;
+    }
+
+    // RENDER DASHBOARD ACTIVE JOBS
+    function renderDashboardJobs() {
+      const container = document.getElementById("dashboard-jobs-list");
+      container.innerHTML = "";
+      const previewJobs = appData.jobs.slice(0, 6);
+
+      if (previewJobs.length === 0) {
+        container.innerHTML = `<div class="col-span-3 text-center py-6 text-slate-500 text-sm">Abhi koi active job card nahi hai. "Naya Job Card" par click karein.</div>`;
+        return;
+      }
+
+      previewJobs.forEach(job => {
+        const stageInfo = STAGES[job.stage] || STAGES.RECEIVED;
+        const balance = Math.max(0, job.totalAmount - job.advancePaid);
+
+        const card = document.createElement("div");
+        card.className = "p-4 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-cyan-400">${job.id}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${stageInfo.color}">${stageInfo.label}</span>
+            </div>
+            <h4 class="font-bold text-white text-sm line-clamp-1">${job.item}</h4>
+            <div class="text-xs text-slate-400 mt-0.5">${job.customerName} · ${job.phone}</div>
+            <div class="mt-2 text-xs flex items-center gap-1.5 text-slate-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              <span class="font-medium">${job.pattern}</span>
+            </div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <span class="text-slate-400">Total: <strong class="text-white">₹${job.totalAmount}</strong></span>
+            ${balance > 0 ? `<span class="text-amber-400 font-semibold">Due: ₹${balance}</span>` : `<span class="text-emerald-400 font-semibold">Paid in Full</span>`}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // RENDER JOBS LIST
+    function renderJobs() {
+      const container = document.getElementById("jobs-container");
+      const emptyState = document.getElementById("jobs-empty-state");
+      const searchTerm = document.getElementById("input-search-jobs").value.toLowerCase().trim();
+      const stageFilter = document.getElementById("select-filter-stage").value;
+
+      container.innerHTML = "";
+
+      let filtered = appData.jobs.filter(job => {
+        const matchSearch = job.customerName.toLowerCase().includes(searchTerm) ||
+                            job.phone.includes(searchTerm) ||
+                            job.item.toLowerCase().includes(searchTerm) ||
+                            job.pattern.toLowerCase().includes(searchTerm) ||
+                            job.id.toLowerCase().includes(searchTerm);
+        const matchStage = (stageFilter === "ALL") || (job.stage === stageFilter);
+        return matchSearch && matchStage;
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove("hidden");
+      } else {
+        emptyState.classList.add("hidden");
+      }
+
+      filtered.forEach(job => {
+        const stageInfo = STAGES[job.stage] || STAGES.RECEIVED;
+        const balance = Math.max(0, job.totalAmount - job.advancePaid);
+
+        // WhatsApp message generator
+        const waText = encodeURIComponent(`Namaste ${job.customerName} ji! SB HYDRO-GRAPHICS se aapka job (${job.item}) ka status: *${stageInfo.label}* hai. Total: ₹${job.totalAmount}, Due: ₹${balance}. Dhanyawad!`);
+        const waLink = `https://wa.me/91${job.phone}?text=${waText}`;
+
+        const card = document.createElement("div");
+        card.className = "p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-xl flex flex-col justify-between transition-all";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-cyan-400 border border-slate-800">${job.id}</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${stageInfo.color}">${stageInfo.label}</span>
+            </div>
+
+            <h3 class="font-bold text-white text-base">${job.item}</h3>
+            <p class="text-xs text-slate-400 mt-0.5">${job.vehicleRef || "Custom Part"}</p>
+
+            <div class="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5 text-xs">
+              <div class="flex justify-between">
+                <span class="text-slate-400">Customer:</span>
+                <span class="text-slate-200 font-semibold">${job.customerName} (${job.phone})</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Pattern:</span>
+                <span class="text-cyan-300 font-semibold">${job.pattern}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Base / Finish:</span>
+                <span class="text-slate-300">${job.baseColor} · ${job.clearCoat}</span>
+              </div>
+              ${job.notes ? `<div class="text-[11px] text-slate-400 pt-1 border-t border-slate-800 italic">"${job.notes}"</div>` : ""}
+            </div>
+
+            <div class="mt-4 flex items-center justify-between p-3 rounded-xl bg-slate-800/50 text-xs">
+              <div>
+                <span class="text-slate-400 block text-[10px] uppercase">Agreed Total</span>
+                <span class="text-sm font-bold text-white">₹${job.totalAmount}</span>
+              </div>
+              <div class="text-center">
+                <span class="text-slate-400 block text-[10px] uppercase">Advance</span>
+                <span class="text-sm font-bold text-emerald-400">₹${job.advancePaid}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-slate-400 block text-[10px] uppercase">Balance Due</span>
+                <span class="text-sm font-bold ${balance > 0 ? 'text-amber-400' : 'text-slate-500'}">₹${balance}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+            <!-- Stage Advance -->
+            ${stageInfo.next ? `
+              <button onclick="advanceJobStage('${job.id}')" class="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-bold transition-all flex items-center gap-1">
+                <span>Next Stage &rarr;</span>
+              </button>
+            ` : `
+              <span class="text-[11px] text-slate-500 font-medium">Completed</span>
+            `}
+
+            <div class="flex items-center gap-1.5">
+              <!-- WhatsApp Update -->
+              <a href="${waLink}" target="_blank" rel="noopener" class="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold flex items-center gap-1" title="Send WhatsApp Update">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.297.144.35.49 1.199.533 1.286.043.087.072.188.014.303-.058.115-.087.188-.173.289l-.26.302c-.087.087-.179.18-.077.355.101.174.449.741.964 1.2.662.591 1.221.774 1.394.861.173.087.275.072.376-.043.101-.116.433-.506.549-.68.116-.173.231-.144.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
+                <span class="hidden sm:inline">WhatsApp</span>
+              </a>
+
+              <!-- Collect Due / Edit -->
+              ${balance > 0 ? `
+                <button onclick="openCollectPayment('${job.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-bold">
+                  Due ₹${balance}
+                </button>
+              ` : ""}
+
+              <!-- Delete -->
+              <button onclick="deleteJob('${job.id}')" class="p-2 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-rose-500/10" title="Delete Job">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ADVANCE JOB STAGE
+    window.advanceJobStage = function(jobId) {
+      const job = appData.jobs.find(j => j.id === jobId);
+      if (!job) return;
+      const current = STAGES[job.stage];
+      if (current && current.next) {
+        job.stage = current.next;
+        saveDB(appData);
+        updateStats();
+        renderJobs();
+        renderDashboardJobs();
+        showToast(`${job.id} stage updated: ${STAGES[job.stage].label}`, "🌊");
+      }
+    };
+
+    // DELETE JOB
+    window.deleteJob = function(jobId) {
+      appData.jobs = appData.jobs.filter(j => j.id !== jobId);
+      saveDB(appData);
+      updateStats();
+      renderJobs();
+      renderDashboardJobs();
+      showToast(`Job ${jobId} deleted`, "🗑️");
+    };
+
+    // SEARCH & FILTER JOBS LISTENER
+    document.getElementById("input-search-jobs").addEventListener("input", renderJobs);
+    document.getElementById("select-filter-stage").addEventListener("change", renderJobs);
+
+    // RENDER STOCK TABLE
+    function renderStock() {
+      const tbody = document.getElementById("stock-table-body");
+      const search = document.getElementById("input-search-stock").value.toLowerCase().trim();
+      const catFilter = document.getElementById("select-filter-stock-category").value;
+
+      tbody.innerHTML = "";
+
+      let filtered = appData.stock.filter(item => {
+        const matchSearch = item.name.toLowerCase().includes(search) || (item.sku && item.sku.toLowerCase().includes(search));
+        const matchCat = (catFilter === "ALL") || (item.cat === catFilter);
+        return matchSearch && matchCat;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Koi stock item nahi mila. "Add Stock" par click karein.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const isLow = (item.cat === "FILM" && item.qty < 5) || (item.cat === "CHEMICAL" && item.qty < 3);
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-white">${item.name}</div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-800 text-slate-300">${item.cat}</span>
+          </td>
+          <td class="px-6 py-4 font-mono text-xs text-slate-400">${item.sku || "-"}</td>
+          <td class="px-6 py-4 font-bold text-white">${item.qty} ${item.unit}</td>
+          <td class="px-6 py-4 text-slate-300">₹${item.price || 0}</td>
+          <td class="px-6 py-4">
+            ${isLow ? `
+              <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">Low Stock</span>
+            ` : `
+              <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">In Stock</span>
+            `}
+          </td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="adjustStock('${item.id}', 1)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold mr-1">+1</button>
+            <button onclick="adjustStock('${item.id}', -1)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold mr-2">-1</button>
+            <button onclick="deleteStock('${item.id}')" class="text-slate-500 hover:text-rose-400 text-xs font-semibold">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.adjustStock = function(stockId, change) {
+      const item = appData.stock.find(s => s.id === stockId);
+      if (!item) return;
+      item.qty = Math.max(0, item.qty + change);
+      saveDB(appData);
+      updateStats();
+      renderStock();
+    };
+
+    window.deleteStock = function(stockId) {
+      appData.stock = appData.stock.filter(s => s.id !== stockId);
+      saveDB(appData);
+      updateStats();
+      renderStock();
+      showToast("Stock item deleted", "🗑️");
+    };
+
+    document.getElementById("input-search-stock").addEventListener("input", renderStock);
+    document.getElementById("select-filter-stock-category").addEventListener("change", renderStock);
+
+    // RENDER BILLS TABLE
+    function renderBills() {
+      const tbody = document.getElementById("bills-table-body");
+      const search = document.getElementById("input-search-bills").value.toLowerCase().trim();
+
+      tbody.innerHTML = "";
+
+      let filtered = appData.bills.filter(b => {
+        return b.id.toLowerCase().includes(search) ||
+               b.customerName.toLowerCase().includes(search) ||
+               b.phone.includes(search);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Koi bill nahi mila. "Create New Invoice" par click karein.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(bill => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-mono font-bold text-cyan-400">${bill.id}</td>
+          <td class="px-6 py-4 text-xs text-slate-400">${bill.date}</td>
+          <td class="px-6 py-4">
+            <div class="font-bold text-white">${bill.customerName}</div>
+            <div class="text-xs text-slate-400">${bill.phone}</div>
+          </td>
+          <td class="px-6 py-4 text-xs text-slate-300">
+            ${bill.items.map(i => `${i.desc} (x${i.qty})`).join("<br>")}
+          </td>
+          <td class="px-6 py-4 font-black text-white font-display text-base">₹${Math.round(bill.total).toLocaleString("en-IN")}</td>
+          <td class="px-6 py-4">
+            ${bill.balance > 0 ? `
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">Due ₹${bill.balance}</span>
+            ` : `
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Paid In Full</span>
+            `}
+          </td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="viewInvoice('${bill.id}')" class="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold">
+              View / Print
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById("input-search-bills").addEventListener("input", renderBills);
+
+    // RENDER DUES TABLE
+    function renderDues() {
+      const tbody = document.getElementById("dues-table-body");
+      tbody.innerHTML = "";
+
+      const dueJobs = appData.jobs.filter(j => (j.totalAmount - j.advancePaid) > 0);
+
+      if (dueJobs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-emerald-400 font-semibold">Bahut badiya! Kisi bhi customer ka balance pending nahi hai.</td></tr>`;
+        return;
+      }
+
+      dueJobs.forEach(job => {
+        const balance = job.totalAmount - job.advancePaid;
+        const reminderMsg = encodeURIComponent(`Namaste ${job.customerName} ji! SB HYDRO-GRAPHICS se aapke job (${job.item}) ka bacha hua payment ₹${balance} pending hai. Kripya UPI / Cash se clear kar lein. Dhanyawad!`);
+        const waLink = `https://wa.me/91${job.phone}?text=${reminderMsg}`;
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-bold text-white">${job.customerName}</td>
+          <td class="px-6 py-4 text-xs text-slate-300 font-mono">${job.phone}</td>
+          <td class="px-6 py-4">
+            <div class="text-xs text-cyan-400 font-mono font-bold">${job.id}</div>
+            <div class="text-xs text-slate-300 font-medium">${job.item}</div>
+          </td>
+          <td class="px-6 py-4 font-bold text-white">₹${job.totalAmount}</td>
+          <td class="px-6 py-4 font-bold text-emerald-400">₹${job.advancePaid}</td>
+          <td class="px-6 py-4 font-black text-amber-400 font-display text-base">₹${balance}</td>
+          <td class="px-6 py-4 text-right">
+            <div class="inline-flex items-center gap-2">
+              <a href="${waLink}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold" title="WhatsApp Reminder">
+                WhatsApp
+              </a>
+              <button onclick="openCollectPayment('${job.id}')" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                Receive
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // SETTINGS FORM
+    function populateSettingsForm() {
+      const s = appData.settings;
+      document.getElementById("setting-shop-name").value = s.shopName || "";
+      document.getElementById("setting-tagline").value = s.tagline || "";
+      document.getElementById("setting-phone").value = s.phone || "";
+      document.getElementById("setting-gstin").value = s.gstin || "";
+      document.getElementById("setting-address").value = s.address || "";
+      document.getElementById("setting-upi-id").value = s.upiId || "";
+      document.getElementById("setting-owner").value = s.owner || "";
+      document.getElementById("setting-terms").value = s.terms || "";
+    }
+
+    document.getElementById("form-shop-settings").addEventListener("submit", (e) => {
+      e.preventDefault();
+      appData.settings = {
+        shopName: document.getElementById("setting-shop-name").value,
+        tagline: document.getElementById("setting-tagline").value,
+        phone: document.getElementById("setting-phone").value,
+        whatsapp: document.getElementById("setting-phone").value.replace(/\D/g, ""),
+        gstin: document.getElementById("setting-gstin").value,
+        address: document.getElementById("setting-address").value,
+        upiId: document.getElementById("setting-upi-id").value,
+        owner: document.getElementById("setting-owner").value,
+        terms: document.getElementById("setting-terms").value,
+      };
+      saveDB(appData);
+      showToast("Shop Details successfully saved!", "💾");
+    });
+
+    document.getElementById("btn-reset-demo-data").addEventListener("click", () => {
+      appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      saveDB(appData);
+      updateStats();
+      renderDashboardJobs();
+      renderJobs();
+      renderStock();
+      renderBills();
+      renderDues();
+      populateSettingsForm();
+      showToast("SB HYDRO-GRAPHICS sample data restored", "🔄");
+    });
+
+    // BACKUP & RESTORE
+    document.getElementById("btn-export-json").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(appData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SB_Hydrographics_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Backup JSON file downloaded", "📥");
+    });
+
+    document.getElementById("input-restore-file").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (parsed.settings && parsed.jobs) {
+            appData = parsed;
+            saveDB(appData);
+            updateStats();
+            renderDashboardJobs();
+            renderJobs();
+            renderStock();
+            renderBills();
+            renderDues();
+            populateSettingsForm();
+            showToast("Backup restored successfully!", "✅");
+          } else {
+            showToast("Invalid backup file structure", "❌", true);
+          }
+        } catch (err) {
+          showToast("Failed to parse JSON file", "❌", true);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // MODAL HANDLERS
+    const modalJob = document.getElementById("modal-job");
+    const modalStock = document.getElementById("modal-stock");
+    const modalBill = document.getElementById("modal-bill");
+    const modalPayment = document.getElementById("modal-payment");
+    const modalInvoiceView = document.getElementById("modal-invoice-view");
+
+    function openModal(modal) { modal.classList.remove("hidden"); }
+    function closeModal(modal) { modal.classList.add("hidden"); }
+
+    document.getElementById("btn-quick-new-job").addEventListener("click", () => openModal(modalJob));
+    document.getElementById("btn-hero-new-job").addEventListener("click", () => openModal(modalJob));
+    document.getElementById("btn-create-job-modal").addEventListener("click", () => openModal(modalJob));
+    document.getElementById("btn-empty-create-job").addEventListener("click", () => openModal(modalJob));
+    document.getElementById("btn-close-job-modal").addEventListener("click", () => closeModal(modalJob));
+    document.getElementById("btn-cancel-job-modal").addEventListener("click", () => closeModal(modalJob));
+
+    document.getElementById("btn-hero-add-film").addEventListener("click", () => openModal(modalStock));
+    document.getElementById("btn-add-stock-modal").addEventListener("click", () => openModal(modalStock));
+    document.getElementById("btn-close-stock-modal").addEventListener("click", () => closeModal(modalStock));
+    document.getElementById("btn-cancel-stock-modal").addEventListener("click", () => closeModal(modalStock));
+
+    document.getElementById("btn-quick-new-bill").addEventListener("click", () => {
+      populateBillJobSelect();
+      resetBillForm();
+      openModal(modalBill);
+    });
+    document.getElementById("btn-create-bill-modal").addEventListener("click", () => {
+      populateBillJobSelect();
+      resetBillForm();
+      openModal(modalBill);
+    });
+    document.getElementById("btn-close-bill-modal").addEventListener("click", () => closeModal(modalBill));
+    document.getElementById("btn-cancel-bill-modal").addEventListener("click", () => closeModal(modalBill));
+
+    document.getElementById("btn-close-payment-modal").addEventListener("click", () => closeModal(modalPayment));
+    document.getElementById("btn-cancel-payment-modal").addEventListener("click", () => closeModal(modalPayment));
+
+    document.getElementById("btn-close-invoice-modal").addEventListener("click", () => closeModal(modalInvoiceView));
+    document.getElementById("btn-print-invoice-action").addEventListener("click", () => window.print());
+
+    // FORM: CREATE JOB
+    document.getElementById("form-job").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const newId = "SBH-" + (100 + appData.jobs.length + 1);
+
+      const job = {
+        id: newId,
+        customerName: document.getElementById("job-cust-name").value.trim(),
+        phone: document.getElementById("job-cust-phone").value.trim(),
+        item: document.getElementById("job-item-name").value.trim(),
+        vehicleRef: document.getElementById("job-vehicle-ref").value.trim(),
+        pattern: document.getElementById("job-pattern").value,
+        baseColor: document.getElementById("job-base-color").value,
+        clearCoat: document.getElementById("job-clear-coat").value,
+        totalAmount: parseFloat(document.getElementById("job-total-amt").value) || 0,
+        advancePaid: parseFloat(document.getElementById("job-advance-amt").value) || 0,
+        stage: document.getElementById("job-stage").value,
+        notes: document.getElementById("job-notes").value.trim(),
+        date: new Date().toISOString().slice(0, 10)
+      };
+
+      appData.jobs.unshift(job);
+      saveDB(appData);
+      updateStats();
+      renderJobs();
+      renderDashboardJobs();
+      closeModal(modalJob);
+      document.getElementById("form-job").reset();
+      showToast(`Job Card ${newId} created successfully!`, "🌊");
+    });
+
+    // FORM: ADD STOCK
+    document.getElementById("form-stock").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const item = {
+        id: "STK-" + (appData.stock.length + 1),
+        name: document.getElementById("stock-name").value.trim(),
+        cat: document.getElementById("stock-cat").value,
+        sku: document.getElementById("stock-sku").value.trim() || ("SB-" + Math.floor(Math.random() * 900 + 100)),
+        qty: parseFloat(document.getElementById("stock-qty").value) || 0,
+        unit: document.getElementById("stock-unit").value,
+        price: parseFloat(document.getElementById("stock-price").value) || 0
+      };
+
+      appData.stock.unshift(item);
+      saveDB(appData);
+      updateStats();
+      renderStock();
+      closeModal(modalStock);
+      document.getElementById("form-stock").reset();
+      showToast(`${item.name} stock added!`, "📦");
+    });
+
+    // BILL MODAL DYNAMICS
+    function populateBillJobSelect() {
+      const select = document.getElementById("bill-link-job");
+      select.innerHTML = `<option value="">-- Direct Customer Walk-in / Retail --</option>`;
+      appData.jobs.forEach(job => {
+        select.innerHTML += `<option value="${job.id}">${job.id} - ${job.customerName} (${job.item})</option>`;
+      });
+    }
+
+    document.getElementById("bill-link-job").addEventListener("change", (e) => {
+      const jobId = e.target.value;
+      if (!jobId) return;
+      const job = appData.jobs.find(j => j.id === jobId);
+      if (job) {
+        document.getElementById("bill-cust-name").value = job.customerName;
+        document.getElementById("bill-cust-phone").value = job.phone;
+        
+        // Populate single item row
+        const container = document.getElementById("bill-items-list");
+        container.innerHTML = "";
+        addBillItemRow(`Hydro Dipping: ${job.item} (${job.pattern})`, 1, job.totalAmount);
+        document.getElementById("bill-received-amt").value = job.advancePaid || 0;
+        recalculateBill();
+      }
+    });
+
+    function resetBillForm() {
+      document.getElementById("form-bill").reset();
+      const container = document.getElementById("bill-items-list");
+      container.innerHTML = "";
+      addBillItemRow("Hydro Dipping Custom Job", 1, 3500);
+      recalculateBill();
+    }
+
+    function addBillItemRow(desc = "", qty = 1, rate = 0) {
+      const container = document.getElementById("bill-items-list");
+      const row = document.createElement("div");
+      row.className = "bill-row flex items-center gap-2";
+      row.innerHTML = `
+        <input type="text" placeholder="Item description" value="${desc}" class="row-desc flex-1 px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white" required>
+        <input type="number" min="1" value="${qty}" class="row-qty w-16 px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white text-center" required>
+        <input type="number" min="0" value="${rate}" class="row-rate w-24 px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white text-right" required>
+        <button type="button" class="btn-del-row p-1.5 text-slate-500 hover:text-rose-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      `;
+
+      row.querySelector(".btn-del-row").addEventListener("click", () => {
+        row.remove();
+        recalculateBill();
+      });
+
+      row.querySelectorAll("input").forEach(inp => {
+        inp.addEventListener("input", recalculateBill);
+      });
+
+      container.appendChild(row);
+      recalculateBill();
+    }
+
+    document.getElementById("btn-add-bill-row").addEventListener("click", () => addBillItemRow());
+    document.getElementById("bill-gst-toggle").addEventListener("change", recalculateBill);
+
+    function recalculateBill() {
+      const rows = document.querySelectorAll(".bill-row");
+      let subtotal = 0;
+      rows.forEach(r => {
+        const qty = parseFloat(r.querySelector(".row-qty").value) || 0;
+        const rate = parseFloat(r.querySelector(".row-rate").value) || 0;
+        subtotal += (qty * rate);
+      });
+
+      const applyGst = document.getElementById("bill-gst-toggle").checked;
+      const gst = applyGst ? (subtotal * 0.18) : 0;
+      const grand = subtotal + gst;
+
+      document.getElementById("bill-calc-subtotal").textContent = "₹" + subtotal.toLocaleString("en-IN");
+      document.getElementById("bill-calc-gst").textContent = "₹" + gst.toFixed(2);
+      document.getElementById("bill-calc-grandtotal").textContent = "₹" + Math.round(grand).toLocaleString("en-IN");
+    }
+
+    // CREATE BILL SUBMIT
+    document.getElementById("form-bill").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const rows = document.querySelectorAll(".bill-row");
+      const items = [];
+      let subtotal = 0;
+
+      rows.forEach(r => {
+        const desc = r.querySelector(".row-desc").value.trim();
+        const qty = parseFloat(r.querySelector(".row-qty").value) || 1;
+        const rate = parseFloat(r.querySelector(".row-rate").value) || 0;
+        const amount = qty * rate;
+        subtotal += amount;
+        items.push({ desc, qty, rate, amount });
+      });
+
+      const applyGst = document.getElementById("bill-gst-toggle").checked;
+      const gstAmount = applyGst ? (subtotal * 0.18) : 0;
+      const total = subtotal + gstAmount;
+      const paid = parseFloat(document.getElementById("bill-received-amt").value) || 0;
+      const balance = Math.max(0, total - paid);
+
+      const invId = "SBH-INV-" + (1000 + appData.bills.length + 1);
+
+      const bill = {
+        id: invId,
+        date: new Date().toISOString().slice(0, 10),
+        customerName: document.getElementById("bill-cust-name").value.trim(),
+        phone: document.getElementById("bill-cust-phone").value.trim(),
+        jobId: document.getElementById("bill-link-job").value,
+        items,
+        subtotal,
+        gstApplied: applyGst,
+        gstAmount,
+        total,
+        paid,
+        balance,
+        paymentMode: document.getElementById("bill-payment-method").value
+      };
+
+      appData.bills.unshift(bill);
+
+      // If linked to job, update job advance
+      if (bill.jobId) {
+        const linkedJob = appData.jobs.find(j => j.id === bill.jobId);
+        if (linkedJob) {
+          linkedJob.advancePaid = paid;
+        }
+      }
+
+      saveDB(appData);
+      updateStats();
+      renderBills();
+      renderJobs();
+      renderDues();
+      closeModal(modalBill);
+      showToast(`Invoice ${invId} generated!`, "🧾");
+      viewInvoice(invId);
+    });
+
+    // COLLECT PAYMENT MODAL
+    window.openCollectPayment = function(jobId) {
+      const job = appData.jobs.find(j => j.id === jobId);
+      if (!job) return;
+      const balance = Math.max(0, job.totalAmount - job.advancePaid);
+
+      document.getElementById("payment-job-id").value = job.id;
+      document.getElementById("payment-cust-display").textContent = `${job.customerName} (${job.item})`;
+      document.getElementById("payment-balance-display").textContent = "₹" + balance.toLocaleString("en-IN");
+      document.getElementById("payment-amount").value = balance;
+      openModal(modalPayment);
+    };
+
+    document.getElementById("form-collect-payment").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const jobId = document.getElementById("payment-job-id").value;
+      const amt = parseFloat(document.getElementById("payment-amount").value) || 0;
+      const mode = document.getElementById("payment-mode").value;
+
+      const job = appData.jobs.find(j => j.id === jobId);
+      if (job) {
+        job.advancePaid += amt;
+        saveDB(appData);
+        updateStats();
+        renderJobs();
+        renderDues();
+        closeModal(modalPayment);
+        showToast(`Payment of ₹${amt} received via ${mode}!`, "💰");
+      }
+    });
+
+    // VIEW / PRINT INVOICE
+    window.viewInvoice = function(billId) {
+      const bill = appData.bills.find(b => b.id === billId);
+      if (!bill) return;
+
+      const s = appData.settings;
+      document.getElementById("inv-shop-name").textContent = s.shopName;
+      document.getElementById("inv-shop-tagline").textContent = s.tagline;
+      document.getElementById("inv-shop-address").textContent = s.address;
+      document.getElementById("inv-shop-contact").textContent = "Phone: " + s.phone;
+      document.getElementById("inv-shop-gstin").textContent = "GSTIN: " + (s.gstin || "N/A");
+      document.getElementById("inv-shop-upi").textContent = s.upiId || "N/A";
+      document.getElementById("inv-terms-text").textContent = s.terms || "";
+
+      document.getElementById("inv-number").textContent = bill.id;
+      document.getElementById("inv-date").textContent = bill.date;
+      document.getElementById("inv-cust-name").textContent = bill.customerName;
+      document.getElementById("inv-cust-phone").textContent = "Mobile: +91 " + bill.phone;
+      document.getElementById("inv-pay-mode").textContent = bill.paymentMode;
+
+      const tbody = document.getElementById("inv-items-body");
+      tbody.innerHTML = "";
+      bill.items.forEach((item, idx) => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="py-2 px-2 text-slate-500">${idx + 1}</td>
+            <td class="py-2 px-2 font-medium text-slate-900">${item.desc}</td>
+            <td class="py-2 px-2 text-center text-slate-600">${item.qty}</td>
+            <td class="py-2 px-2 text-right text-slate-600">₹${item.rate}</td>
+            <td class="py-2 px-2 text-right font-semibold text-slate-900">₹${item.amount}</td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("inv-subtotal").textContent = "₹" + bill.subtotal.toLocaleString("en-IN");
+      if (bill.gstApplied) {
+        document.getElementById("inv-gst-row").style.display = "flex";
+        document.getElementById("inv-gst").textContent = "₹" + bill.gstAmount.toFixed(2);
+      } else {
+        document.getElementById("inv-gst-row").style.display = "none";
+      }
+
+      document.getElementById("inv-total").textContent = "₹" + Math.round(bill.total).toLocaleString("en-IN");
+      document.getElementById("inv-paid").textContent = "₹" + bill.paid.toLocaleString("en-IN");
+      document.getElementById("inv-balance").textContent = "₹" + bill.balance.toLocaleString("en-IN");
+
+      openModal(modalInvoiceView);
+    };
+
+    // ON INITIAL LOAD
+    window.addEventListener("DOMContentLoaded", () => {
+      updateStats();
+      renderDashboardCharts();
+      renderDashboardJobs();
+      renderJobs();
+      renderStock();
+      renderBills();
+      renderDues();
+      populateSettingsForm();
+    });
+  
+    // API SYNC HELPER WITH LOCALSTORAGE FALLBACK
+    const API_BASE = window.location.origin;
+    let isServerConnected = false;
+
+    async function checkServerHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (res.ok) {
+          isServerConnected = true;
+          document.querySelector("header span:contains('Live Mode')") || console.log("Backend Connected");
+          await syncWithBackend();
+        }
+      } catch (e) {
+        console.log("Running in Standalone Client Mode (LocalStorage Active)");
+      }
+    }
+
+    async function syncWithBackend() {
+      try {
+        const [jobsRes, stockRes, billsRes, settingsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/jobs`),
+          fetch(`${API_BASE}/api/stock`),
+          fetch(`${API_BASE}/api/bills`),
+          fetch(`${API_BASE}/api/settings`)
+        ]);
+
+        if (jobsRes.ok) {
+          const serverJobs = await jobsRes.json();
+          if (serverJobs.length > 0) appData.jobs = serverJobs;
+        }
+        if (stockRes.ok) {
+          const serverStock = await stockRes.json();
+          if (serverStock.length > 0) appData.stock = serverStock;
+        }
+        if (billsRes.ok) {
+          const serverBills = await billsRes.json();
+          if (serverBills.length > 0) appData.bills = serverBills;
+        }
+        if (settingsRes.ok) {
+          const serverSettings = await settingsRes.json();
+          if (serverSettings.shop_name) {
+            appData.settings = {
+              shopName: serverSettings.shop_name,
+              tagline: serverSettings.tagline,
+              phone: serverSettings.phone,
+              whatsapp: serverSettings.whatsapp,
+              gstin: serverSettings.gstin,
+              address: serverSettings.address,
+              owner: serverSettings.owner,
+              upiId: serverSettings.upi_id,
+              terms: serverSettings.terms
+            };
+          }
+        }
+        saveDB(appData);
+        updateStats();
+        renderDashboardCharts();
+        renderDashboardJobs();
+        renderJobs();
+        renderStock();
+        renderBills();
+        renderDues();
+        populateSettingsForm();
+      } catch (err) {
+        console.warn("Backend sync failed, using cached data", err);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      checkServerHealth();
+    });
+
+</script>
+</body>
+</html>

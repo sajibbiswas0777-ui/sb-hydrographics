@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  sb-hydrographics:
+    build: .
+    container_name: sb_hydrographics_studio
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./sb_hydrographics.db:/app/sb_hydrographics.db
+      - ./uploads:/app/uploads
+    restart: unless-stopped
