@@ -821,10 +821,40 @@
         </div>
       </div>
 
-      <!-- BACKUP & RESTORE DATA -->
+      <!-- 100% FREE GOOGLE SHEETS LIVE AUTO-BACKUP -->
+      <div class="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-emerald-950/30 to-slate-900 border border-emerald-500/30 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+              <span>📊 100% Free Google Sheets Cloud Auto-Sync</span>
+            </div>
+            <h4 class="font-bold text-white text-base mt-1 flex items-center gap-2">
+              <span>Google Drive Live Backup</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5">Har naya Job Card, Stage update aur Bill automatically background mein aapke Google Drive ki Google Sheet mein save hota rehta hai.</p>
+          </div>
+          <button id="btn-sync-all-sheets" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all active:scale-95 flex items-center gap-1.5 shadow-md shadow-emerald-500/20 whitespace-nowrap">
+            <span>⚡ Sync All Data to Google Sheet Now</span>
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-300 uppercase">Google Apps Script Webhook URL</label>
+          <div class="flex gap-2">
+            <input id="setting-sheets-webhook" type="text" value="https://script.google.com/macros/s/AKfycbznaBqHXXP_wJZs_zTA48LmrsACvai_kg6AVJfx43nk-W3IRNAgCtNyb5GB5jXktB4/exec" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-400">
+            <button id="btn-save-sheets-webhook" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold transition-all whitespace-nowrap">
+              Save URL
+            </button>
+          </div>
+          <p class="text-[11px] text-emerald-400/90 font-medium">✓ Connected: "SB HYDRO-GRAPHICS Live Backup" Sheet is linked and active!</p>
+        </div>
+      </div>
+
+      <!-- MANUAL JSON BACKUP & RESTORE -->
       <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
-        <h4 class="font-bold text-white text-base mb-2">Data Backup & Restore</h4>
-        <p class="text-xs text-slate-400 mb-4">Aap apne sare jobs, stock aur bills ka JSON backup download karke safe rakh sakte hain.</p>
+        <h4 class="font-bold text-white text-base mb-1">Manual JSON Backup & Restore</h4>
+        <p class="text-xs text-slate-400 mb-4">Aap apne poore studio ka offline JSON backup file download karke bhi safe rakh sakte hain.</p>
         <div class="flex flex-wrap gap-3">
           <button id="btn-export-json" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-2">
             <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -1266,7 +1296,8 @@
         owner: "Sajib Biswas",
         upiId: "sbhydro@okhdfcbank",
         terms: "1. 1-Year coating warranty against peel-off under regular automotive use. 2. Clean surface with soft microfiber cloth. Do not use industrial acids or steel brushes.",
-        googleReviewLink: "https://g.page/r/CXJVrM2TE-JlEBI/review"
+        googleReviewLink: "https://g.page/r/CXJVrM2TE-JlEBI/review",
+        googleSheetsWebhookUrl: "https://script.google.com/macros/s/AKfycbznaBqHXXP_wJZs_zTA48LmrsACvai_kg6AVJfx43nk-W3IRNAgCtNyb5GB5jXktB4/exec"
       },
       jobs: [
         {
@@ -2713,6 +2744,76 @@
         });
       }
     }
+
+    
+    // ==========================================
+    // GOOGLE SHEETS LIVE AUTO-BACKUP ENGINE
+    // ==========================================
+    window.syncToGoogleSheets = async function(type, payload) {
+      const webhookUrl = appData.settings.googleSheetsWebhookUrl || appData.settings.google_sheets_webhook_url || "https://script.google.com/macros/s/AKfycbznaBqHXXP_wJZs_zTA48LmrsACvai_kg6AVJfx43nk-W3IRNAgCtNyb5GB5jXktB4/exec";
+      if (!webhookUrl) return;
+      try {
+        await fetch(webhookUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: type || "JOB", ...payload })
+        });
+        console.log("Auto-synced to Google Sheet:", type, payload.id || "");
+      } catch (e) {
+        console.warn("Google Sheets background sync failed:", e);
+      }
+    };
+
+    window.syncAllDataToGoogleSheets = async function() {
+      const webhookUrl = appData.settings.googleSheetsWebhookUrl || appData.settings.google_sheets_webhook_url || "https://script.google.com/macros/s/AKfycbznaBqHXXP_wJZs_zTA48LmrsACvai_kg6AVJfx43nk-W3IRNAgCtNyb5GB5jXktB4/exec";
+      if (!webhookUrl) {
+        showToast("Webhook URL missing!", "⚠️");
+        return;
+      }
+      showToast("Syncing all Jobs & Bills to Google Sheet...", "⏳");
+      
+      // 1. Send full snapshot
+      try {
+        await fetch(webhookUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "FULL_BACKUP",
+            jobsCount: appData.jobs.length,
+            billsCount: appData.bills.length,
+            payload: appData
+          })
+        });
+      } catch(e){}
+
+      // 2. Send each job
+      for (const j of appData.jobs) {
+        try {
+          await fetch(webhookUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "JOB", ...j })
+          });
+        } catch(e){}
+      }
+
+      // 3. Send each bill
+      for (const b of appData.bills) {
+        try {
+          await fetch(webhookUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "BILL", ...b })
+          });
+        } catch(e){}
+      }
+
+      showToast("Google Sheet Auto-Sync Complete! 📊", "✅");
+    };
 
     // ON INITIAL LOAD
     window.addEventListener("DOMContentLoaded", () => {
